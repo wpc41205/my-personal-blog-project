@@ -1,13 +1,10 @@
 import './index.css'
-
+import Navbar from './components/navbar'
 
 function App() {
-
   return (
-    <div className="flex justify-center items-center h-screen w-screen">
-      <h1 className="text-3xl font-bold underline justify-center items-center">
-        Hello world!
-      </h1>
+    <div>
+      <Navbar/>
     </div>
   )
 }
