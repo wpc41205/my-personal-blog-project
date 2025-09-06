@@ -1,13 +1,14 @@
 import './index.css'
-
+import Navbar from './components/navbar'
+import HeroSection from './components/herosection'
+import Articles from './components/articles'
 
 function App() {
-
   return (
-    <div className="flex justify-center items-center h-screen w-screen">
-      <h1 className="text-3xl font-bold underline justify-center items-center">
-        Hello world!
-      </h1>
+    <div className="flex flex-col w-full">
+      <Navbar/>
+      <HeroSection/>
+      <Articles/>
     </div>
   )
 }
