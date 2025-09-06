@@ -1,12 +1,14 @@
 import './index.css'
 import Navbar from './components/navbar'
 import HeroSection from './components/herosection'
+import Articles from './components/articles'
 
 function App() {
   return (
-    <div className="flex flex-col items-center w-full">
+    <div className="flex flex-col w-full">
       <Navbar/>
       <HeroSection/>
+      <Articles/>
     </div>
   )
 }
