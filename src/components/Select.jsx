@@ -7,7 +7,7 @@ const Select = ({
   className = '',
   ...props 
 }) => {
-  const baseClasses = 'w-full px-4 py-3 border border-gray-300 rounded-md text-[#26231E] focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none';
+  const baseClasses = 'w-full px-4 py-3 border border-gray-300 rounded-md text-[#26231E] focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none text-[16px] font-medium leading-[24px]';
   
   const selectClasses = `${baseClasses} ${className}`;
   

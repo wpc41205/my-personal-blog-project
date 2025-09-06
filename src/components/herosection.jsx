@@ -28,7 +28,7 @@ const HeroSection = () => {
 
         {/* Right Section - Author Information */}
         <div className="flex-1 flex flex-col justify-center items-center md:items-start md:pl-4 max-w-md">
-          <div className="text-xs font-medium text-[#75716B] mb-2 leading-5 font-['Poppins']">-Author</div>
+          <div className="text-[#75716B] mb-2 font-['Poppins'] text-[16px] font-medium leading-[24px]">-Author</div>
           <h2 className="text-2xl font-semibold text-[#43403B] mb-4 leading-8 font-['Poppins']">Pataveekorn C.</h2>
           <div className="space-y-3 text-[#75716B] max-w-[540px] md:max-w-[347px] text-center md:text-left">
             <p className="text-base font-medium leading-6 font-['Poppins']">

@@ -3,7 +3,7 @@ import Button from './Button';
 import Input from './Input';
 import Select from './Select';
 import { SearchIcon } from './Icons';
-import { COLORS, FONTS, FILTER_OPTIONS } from '../constants';
+import { FILTER_OPTIONS } from '../constants';
 
 function Articles() {
     const SearchIconButton = (
@@ -17,12 +17,12 @@ function Articles() {
 
     return (
         <div className="flex flex-col items-start justify-start w-[80vw] mx-auto">
-            <h1 className={`mt-10 text-2xl font-semibold leading-8 text-[${COLORS.primary}]`}>
+            <h1 className="mt-10 text-2xl font-semibold leading-8 text-[#26231E]">
                 Latest Articles
             </h1>
             
             {/* Filter and Search Container */}
-            <div className={`flex flex-col lg:flex-row lg:justify-between lg:items-center w-full mt-6 lg:h-20 px-4 lg:px-6 py-4 lg:py-0 rounded-lg bg-[${COLORS.lightBackground}]`}>
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center w-full mt-6 lg:h-20 px-4 lg:px-6 py-4 lg:py-0 rounded-lg bg-[#F5F3F0]">
                 {/* Filter Buttons - Desktop */}
                 <div className="hidden lg:flex flex-wrap gap-4 mb-0">
                     {FILTER_OPTIONS.map((option) => (
@@ -49,7 +49,7 @@ function Articles() {
 
                 {/* Filter Dropdown - Mobile */}
                 <div className="lg:hidden w-full">
-                    <label className={`block text-base font-medium text-[${COLORS.primary}] mb-2`}>
+                    <label className="block text-[#75716B] mb-2 text-[16px] font-medium leading-[24px]">
                         Category
                     </label>
                     <Select 
