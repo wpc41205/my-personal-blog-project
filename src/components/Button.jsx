@@ -5,6 +5,7 @@ const Button = ({
   variant = 'primary', 
   size = 'medium',
   className = '',
+  disabled = false,
   ...props 
 }) => {
   const baseClasses = 'focus:outline-none transition-colors duration-200';
@@ -12,7 +13,8 @@ const Button = ({
   const variants = {
     primary: 'bg-[#26231E] text-white hover:bg-[#757168]',
     secondary: 'border border-[#757168] text-[#26231E] hover:bg-[#757168] hover:text-white',
-    ghost: 'text-[#26231E] rounded-md hover:bg-[#DAD6D1]'
+    ghost: 'text-[#75716B] rounded-md hover:bg-white hover:text-[#26231E]',
+    highlight: 'bg-[#DAD6D1] text-[#26231E] rounded-md'
   };
   
   const sizes = {
@@ -21,10 +23,11 @@ const Button = ({
     large: 'px-10 py-3 text-[16px] font-medium leading-[24px] h-12'
   };
   
-  const buttonClasses = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
+  const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed hover:bg-[#DAD6D1]' : '';
+  const buttonClasses = `${baseClasses} ${variants[variant]} ${sizes[size]} ${disabledClasses} ${className}`;
   
   return (
-    <button className={buttonClasses} {...props}>
+    <button className={buttonClasses} disabled={disabled} {...props}>
       {children}
     </button>
   );

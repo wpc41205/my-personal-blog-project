@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Button from './Button';
 import Input from './Input';
 import Select from './Select';
@@ -7,6 +7,7 @@ import { FILTER_OPTIONS } from '../constants';
 import { blogPosts } from '../data/blogPosts';
 
 function Articles() {
+    const [category, setCategory] = useState("highlight");
     const SearchIconButton = (
         <button 
             type="button"
@@ -29,9 +30,11 @@ function Articles() {
                     {FILTER_OPTIONS.map((option) => (
                         <Button
                             key={option.value}
-                            variant="ghost"
+                            variant={option.value === category ? 'highlight' : 'ghost'}
                             size="small"
                             className="px-6 py-2"
+                            disabled={option.value === category}
+                            onClick={() => setCategory(option.value)}
                         >
                             {option.label}
                         </Button>
@@ -55,6 +58,8 @@ function Articles() {
                     </label>
                     <Select 
                         options={FILTER_OPTIONS}
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
                         className="w-full px-4 py-3"
                     />
                 </div>
