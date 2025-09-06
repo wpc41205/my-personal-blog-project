@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import Button from './Button'
 import { MenuIcon } from './Icons'
-import { COLORS, FONTS, SPACING } from '../constants'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -9,11 +8,11 @@ const Navbar = () => {
   const toggleMenu = () => setIsMenuOpen((prev) => !prev)
 
   return (
-    <header className={`flex flex-col w-screen bg-[${COLORS.background}] border-b border-[${COLORS.border}]`}>
-      <div className={`flex justify-between items-center h-[64px] md:h-[80px] pt-4 pr-4 pb-4 pl-4 md:pr-[120px] md:pl-[120px]`}>
+    <header className="flex flex-col w-screen bg-[#F9F8F6] border-b border-[#DAD6D1]">
+      <div className="flex justify-between items-center h-[64px] md:h-[80px] pt-4 pr-4 pb-4 pl-4 md:pr-[120px] md:pl-[120px] w-[90vw] mx-auto">
         <div className="flex gap-6">
-          <h1 className={`text-[${COLORS.primary}] text-2xl md:text-3xl ${FONTS.poppins} font-bold`}>
-            Wave-MaShare <span className={`text-[${COLORS.accent}]`}>.</span>
+          <h1 className="text-[#26231E] text-2xl md:text-3xl font-poppins font-bold">
+            Wave-MaShare <span className="text-[#128279]">.</span>
           </h1>
         </div>
         <div className="hidden md:flex gap-2">
@@ -36,7 +35,7 @@ const Navbar = () => {
           aria-label="Toggle menu"
           aria-expanded={isMenuOpen}
           onClick={toggleMenu}
-          className={`md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md border border-[${COLORS.border}] text-[${COLORS.primary}]`}
+          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md border border-[#DAD6D1] text-[#26231E]"
         >
           <span className="sr-only">Open main menu</span>
           <MenuIcon isOpen={isMenuOpen} />
@@ -45,7 +44,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className={`md:hidden flex flex-col items-center gap-2 pt-4 pr-4 pb-4 pl-4 border-t border-[${COLORS.border}] bg-[${COLORS.background}]`}>
+        <div className="md:hidden flex flex-col items-center gap-2 pt-4 pr-4 pb-4 pl-4 border-t border-[#DAD6D1] bg-[#F9F8F6]">
           <Button 
             variant="secondary" 
             size="large"
