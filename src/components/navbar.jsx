@@ -9,7 +9,7 @@ const Navbar = () => {
 
   return (
     <header className="flex flex-col w-screen bg-[#F9F8F6] border-b border-[#DAD6D1]">
-      <div className="flex justify-between items-center h-[64px] md:h-[80px] pt-4 pr-4 pb-4 pl-4 md:pr-[120px] md:pl-[120px]">
+      <div className="flex justify-between items-center h-[64px] md:h-[80px] pt-4 pr-4 pb-4 pl-4 md:pr-[120px] md:pl-[120px] w-[90vw] mx-auto">
         <div className="flex gap-6">
           <h1 className="text-[#26231E] text-2xl md:text-3xl font-poppins font-bold">
             Wave-MaShare <span className="text-[#128279]">.</span>
