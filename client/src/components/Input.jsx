@@ -1,5 +1,14 @@
 import React from 'react';
 
+/**
+ * Input component with consistent styling
+ * @param {Object} props - Component props
+ * @param {string} props.type - Input type (text, email, password, etc.)
+ * @param {string} props.placeholder - Placeholder text
+ * @param {string} props.className - Additional CSS classes
+ * @param {React.ReactNode} props.icon - Icon component to display
+ * @param {Object} props... - Additional props passed to input element
+ */
 const Input = ({ 
   type = 'text',
   placeholder = '',

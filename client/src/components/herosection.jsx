@@ -1,6 +1,9 @@
 import React from 'react';
 import meImage from '../assets/me.jpg';
 
+/**
+ * HeroSection component displaying author information and inspiring text
+ */
 const HeroSection = () => {
   return (
     <section className="flex justify-center items-center w-full mt-12 md:mt-20 px-4 mx-auto">

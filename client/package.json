@@ -1,13 +1,14 @@
 {
-  "name": "my-personal-blog-project",
+  "name": "blog-client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "vite preview --port 3000"
   },
   "dependencies": {
     "postcss-loader": "^8.2.0",
@@ -28,5 +29,6 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.12",
     "vite": "^7.1.2"
-  }
+  },
+  "proxy": "http://localhost:3001"
 }
