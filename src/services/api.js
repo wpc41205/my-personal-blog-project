@@ -1,6 +1,8 @@
 /**
- * API service for fetching blog data
+ * API service for fetching blog data and authentication
  */
+import { supabase } from '../lib/supabase';
+
 const API_BASE_URL = 'https://blog-post-project-api.vercel.app';
 
 /**
@@ -243,6 +245,127 @@ const getMockBlogPosts = (options = {}) => {
     totalPages: Math.ceil(filteredPosts.length / limit),
     totalPosts: filteredPosts.length
   };
+};
+
+export const registerUser = async (userData) => {
+  try {
+    console.log('Registering user with data:', userData);
+    
+    // Register user with Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: userData.email,
+      password: userData.password,
+      options: {
+        data: {
+          name: userData.name,
+          username: userData.username,
+        }
+      }
+    });
+
+    console.log('Auth response:', { authData, authError });
+
+    if (authError) {
+      console.error('Auth error:', authError);
+      throw new Error(authError.message);
+    }
+
+    // Create user profile in users table
+    console.log('Creating user profile...');
+    const { data: profileData, error: userError } = await supabase
+      .from('users')
+      .insert([
+        {
+          id: authData.user.id,
+          username: userData.username,
+          name: userData.name,
+          role: 'user'
+        }
+      ])
+      .select()
+      .single();
+
+    console.log('Profile creation response:', { profileData, userError });
+
+    if (userError) {
+      console.error('Profile creation error:', userError);
+      throw new Error(userError.message);
+    }
+
+    console.log('Registration successful!');
+    return { user: profileData, auth: authData };
+  } catch (error) {
+    console.error('Error registering user:', error.message);
+    throw error;
+  }
+};
+
+export const loginUser = async (credentials) => {
+  try {
+    // Login user with Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: credentials.email,
+      password: credentials.password,
+    });
+
+    if (authError) {
+      throw new Error(authError.message);
+    }
+
+    // Get user profile from users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+
+    if (userError) {
+      throw new Error(userError.message);
+    }
+
+    return { user: userData, auth: authData };
+  } catch (error) {
+    console.error('Error logging in user:', error.message);
+    throw error;
+  }
+};
+
+/**
+ * Logout user using Supabase
+ * @returns {Promise<Object>} Logout response
+ */
+export const logoutUser = async () => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error logging out user:', error.message);
+    throw error;
+  }
+};
+
+/**
+ * Get current user session
+ * @returns {Promise<Object>} Current user data
+ */
+export const getCurrentUser = async () => {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return user;
+  } catch (error) {
+    console.error('Error getting current user:', error.message);
+    throw error;
+  }
 };
 
 /**
