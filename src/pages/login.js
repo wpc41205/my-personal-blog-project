@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Navigation from '../components/layout/Navigation';
 import Input from '../components/ui/Input';
-import { loginUser } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +10,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +23,7 @@ const Login = () => {
 
     try {
       setIsSubmitting(true);
-      await loginUser({ email, password });
+      await login({ email, password });
       router.push('/');
     } catch (err) {
       setError('Login failed. Please check your credentials and try again.');
@@ -34,7 +35,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#F9F8F6] text-[#26231E]">
       <Navigation />
-
+      
       <main className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-[798px] h-[540px] bg-[#EFEEEB] rounded-[16px] px-[120px] py-[60px] border border-[#DAD6D1] opacity-100 flex flex-col gap-[40px]">
           <h1 className="text-center font-poppins font-semibold text-[40px] leading-[48px] tracking-[0] text-[#26231E]">Log in</h1>

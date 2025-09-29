@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import SearchAndFilter from '../ui/SearchAndFilter';
 import ArticleCard from './ArticleCard';
 import Button from '../ui/Button';
@@ -9,6 +10,7 @@ import { DEFAULT_FILTER_OPTIONS, formatDate } from '../../constants';
  * ArticleGrid component displaying filtered and searched articles
  */
 const ArticleGrid = () => {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('highlight');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -149,9 +151,10 @@ const ArticleGrid = () => {
   };
 
   const handleResultSelect = (articleId) => {
-    // Handle result selection
-    console.log('Selected article:', articleId);
+    // Navigate to the selected article
+    router.push(`/post/${articleId}`);
     setShowResults(false);
+    setSearchTerm('');
   };
 
   // Filter articles based on category and search term

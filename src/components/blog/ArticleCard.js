@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 /**
  * ArticleCard component for displaying individual blog articles
@@ -6,7 +7,7 @@ import React from 'react';
 const ArticleCard = ({ article }) => {
 
   return (
-    <div className="w-full space-y-4">
+    <Link href={`/post/${article.id}`} className="block w-full space-y-4 group cursor-pointer">
       {/* Image Container */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
         <div className="h-[360px] bg-gray-200 overflow-hidden">
@@ -14,7 +15,7 @@ const ArticleCard = ({ article }) => {
             <img
               src={article.image}
               alt={article.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
@@ -34,7 +35,7 @@ const ArticleCard = ({ article }) => {
         </div>
         
         {/* Article Title */}
-        <h3 className="text-lg font-bold text-[#26231E] mb-3 line-clamp-2 leading-tight">
+        <h3 className="text-lg font-bold text-[#26231E] mb-3 line-clamp-2 leading-tight group-hover:text-[#12B279] transition-colors duration-200">
           {article.title}
         </h3>
         
@@ -48,7 +49,7 @@ const ArticleCard = ({ article }) => {
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
               <img 
-                src="/me.jpg" 
+                src="/imgdefault.png" 
                 alt="Author" 
                 className="w-full h-full object-cover"
               />
@@ -60,7 +61,7 @@ const ArticleCard = ({ article }) => {
         </div>
       </div>
   
-    </div>
+    </Link>
   );
 };
 

@@ -1,6 +1,7 @@
 // Footer component for the blog
 // Contains social links and copyright
 import React from 'react';
+import Link from 'next/link';
 import { LinkedInIcon, GitHubIcon, EmailIcon } from '../ui/Icons';
 
 const Footer = () => {
