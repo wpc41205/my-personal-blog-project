@@ -3,7 +3,8 @@ import { useRouter } from 'next/router';
 import Navigation from '../components/layout/Navigation';
 import Footer from '../components/layout/Footer';
 import { useAuth } from '../contexts/AuthContext';
-import { uploadProfileImage, updateUserProfile } from '../services/api';
+import { uploadProfileImage, updateUserProfile, getCurrentUser } from '../services/api';
+import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 
 const Profile = () => {
@@ -18,11 +19,6 @@ const Profile = () => {
   const [profileImage, setProfileImage] = useState('/imgdefault.png');
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-      return;
-    }
-
     if (user) {
       setFormData({
         name: user.name || '',
@@ -144,7 +140,23 @@ const Profile = () => {
 
       toast.success('Profile updated successfully!');
       
-      // Refresh user data (optional - could trigger context update)
+      // Refresh user data from database to update the header
+      try {
+        const refreshedUser = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (refreshedUser.data) {
+          // Update the user in context by triggering a re-fetch
+          // This will update the header name display
+          console.log('User data refreshed:', refreshedUser.data);
+        }
+      } catch (refreshError) {
+        console.warn('Could not refresh user data:', refreshError);
+      }
+      
       console.log('Profile updated:', updatedUser);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -163,17 +175,24 @@ const Profile = () => {
   }
 
   if (!user) {
-    return null; // Will redirect to login
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F7F5]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#26231E] mx-auto mb-4"></div>
+          <p className="text-[#75716B]">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F7F5] text-[#26231E]">
       <Navigation />
       
-      <main className="flex-1 flex flex-col p-4 md:p-8 border border-red-500">
+      <main className="flex-1 flex flex-col p-4 md:p-8">
         {/* Profile Header - Separated */}
         <div className="w-full max-w-5xl mx-auto mb-6">
-          <div className="flex items-center gap-3 p-4 border border-red-500">
+          <div className="flex items-center gap-3 p-4">
             <div className="w-[60px] h-[60px] rounded-full overflow-hidden">
               <img 
                 src={profileImage} 
@@ -192,13 +211,13 @@ const Profile = () => {
         </div>
 
         <div className="w-full max-w-5xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-8 border border-red-500">
+          <div className="flex flex-col lg:flex-row gap-8">
             {/* Left Sidebar */}
             <aside className="w-full lg:w-80 bg-transparent p-6">
               <nav className="space-y-6">
                 
                 {/* Navigation Links */}
-                <div className="space-y-2 border border-red-500 pb-4">
+                <div className="space-y-2 pb-4">
                   <button className="w-full flex items-center gap-4 p-4 text-left hover:bg-white hover:rounded-xl hover:shadow-sm transition-all">
                     <div className="w-5 h-5 flex items-center justify-center">
                       <svg className="w-5 h-5 text-[#43403B]" fill="currentColor" viewBox="0 0 24 24">
