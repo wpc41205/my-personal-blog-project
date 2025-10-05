@@ -435,6 +435,83 @@ export const getCurrentUser = async () => {
   }
 };
 
+/**
+ * Upload profile image to Supabase Storage
+ * @param {File} file - Image file to upload
+ * @param {string} userId - User ID
+ * @returns {Promise<string>} Public URL of uploaded image
+ */
+export const uploadProfileImage = async (file, userId) => {
+  try {
+    console.log('Uploading profile image for user:', userId);
+    
+    // Create unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}-${Date.now()}.${fileExt}`;
+    const filePath = `profile-images/${fileName}`;
+
+    // Try to upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Upload error:', error);
+      
+      // If bucket doesn't exist, provide helpful error message
+      if (error.message.includes('Bucket not found') || error.message.includes('does not exist')) {
+        throw new Error('Storage bucket not configured. Please contact administrator to set up image storage.');
+      }
+      
+      throw new Error(error.message);
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    console.log('Upload successful, public URL:', urlData.publicUrl);
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('Error uploading profile image:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update user profile in database
+ * @param {string} userId - User ID
+ * @param {Object} updates - Profile updates
+ * @returns {Promise<Object>} Updated user data
+ */
+export const updateUserProfile = async (userId, updates) => {
+  try {
+    console.log('Updating user profile:', userId, updates);
+    
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Update error:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('Profile updated successfully');
+    return data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
 export const getBlogPost = async (postId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/posts/${postId}`);

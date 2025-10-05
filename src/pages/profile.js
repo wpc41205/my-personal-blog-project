@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Navigation from '../components/layout/Navigation';
 import Footer from '../components/layout/Footer';
 import { useAuth } from '../contexts/AuthContext';
+import { uploadProfileImage, updateUserProfile } from '../services/api';
 import { toast } from 'sonner';
 
 const Profile = () => {
@@ -28,7 +29,22 @@ const Profile = () => {
         username: user.username || '',
         email: user.email || ''
       });
-      setProfileImage(user.avatar_url || '/imgdefault.png');
+      // Set avatar URL with validation
+      const avatarUrl = user.avatar_url;
+      console.log('Profile - Avatar URL:', avatarUrl);
+      
+      // Check if avatar URL is valid and accessible
+      if (avatarUrl && 
+          avatarUrl.startsWith('https://') && 
+          avatarUrl.includes('supabase.co') &&
+          avatarUrl.includes('/storage/v1/object/public/') &&
+          avatarUrl.length > 50) { // Ensure it's not truncated
+        console.log('Profile - Using valid avatar URL:', avatarUrl);
+        setProfileImage(avatarUrl);
+      } else {
+        console.log('Profile - Using default image due to invalid URL:', avatarUrl);
+        setProfileImage('/imgdefault.png');
+      }
     }
   }, [user, loading, router]);
 
@@ -40,16 +56,73 @@ const Profile = () => {
     }));
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // For now, just show a preview (in real app, upload to cloud storage)
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    try {
+      // Show preview first
       const reader = new FileReader();
       reader.onload = (e) => {
         setProfileImage(e.target.result);
       };
       reader.readAsDataURL(file);
-      toast.success('Profile picture updated!');
+
+      // Upload to Supabase Storage
+      if (user?.id) {
+        try {
+          const imageUrl = await uploadProfileImage(file, user.id);
+          
+          // Update user profile with new image URL
+          const updatedUser = await updateUserProfile(user.id, { avatar_url: imageUrl });
+          
+          // Update local state
+          setProfileImage(imageUrl);
+          
+          // Force re-render by updating form data
+          setFormData(prev => ({
+            ...prev,
+            // Trigger re-render
+            _updated: Date.now()
+          }));
+          
+          toast.success('Profile picture updated successfully!');
+        } catch (uploadError) {
+          console.error('Upload failed, using local preview:', uploadError);
+          
+          // Fallback: Keep local preview and show warning
+          toast.warning('Image uploaded locally but not saved to server. Please contact administrator to set up storage.');
+          
+          // Still try to update profile with a placeholder
+          try {
+            await updateUserProfile(user.id, { 
+              avatar_url: `local-preview-${Date.now()}` 
+            });
+          } catch (updateError) {
+            console.error('Failed to update profile:', updateError);
+          }
+        }
+      } else {
+        toast.error('User not found. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image. Please try again.');
+      
+      // Reset to default image on error
+      setProfileImage(user?.avatar_url || '/imgdefault.png');
     }
   };
 
@@ -58,9 +131,21 @@ const Profile = () => {
     setIsSubmitting(true);
 
     try {
-      // Here you would update the user profile in the database
-      // For now, just show success message
+      if (!user?.id) {
+        toast.error('User not found. Please try again.');
+        return;
+      }
+
+      // Update user profile in database
+      const updatedUser = await updateUserProfile(user.id, {
+        name: formData.name,
+        username: formData.username
+      });
+
       toast.success('Profile updated successfully!');
+      
+      // Refresh user data (optional - could trigger context update)
+      console.log('Profile updated:', updatedUser);
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -85,36 +170,42 @@ const Profile = () => {
     <div className="min-h-screen flex flex-col bg-[#F8F7F5] text-[#26231E]">
       <Navigation />
       
-      <main className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-5xl">
-          <div className="flex flex-col lg:flex-row gap-8">
+      <main className="flex-1 flex flex-col p-4 md:p-8 border border-red-500">
+        {/* Profile Header - Separated */}
+        <div className="w-full max-w-5xl mx-auto mb-6">
+          <div className="flex items-center gap-3 p-4 border border-red-500">
+            <div className="w-[60px] h-[60px] rounded-full overflow-hidden">
+              <img 
+                src={profileImage} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = '/imgdefault.png';
+                }}
+                key={formData._updated || 'default'} // Force re-render when updated
+              />
+            </div>
+            <span className="font-['Poppins'] font-semibold text-2xl leading-8 text-[#8B7355]">{user?.name || 'User'}</span>
+            <div className="w-px h-4 bg-gray-300"></div>
+            <span className="font-['Poppins'] font-semibold text-2xl leading-8 text-[#26231E]">Profile</span>
+          </div>
+        </div>
+
+        <div className="w-full max-w-5xl mx-auto">
+          <div className="flex flex-col lg:flex-row gap-8 border border-red-500">
             {/* Left Sidebar */}
             <aside className="w-full lg:w-80 bg-transparent p-6">
               <nav className="space-y-6">
-                {/* Profile Header */}
-                <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-[#E5E5E5] shadow-sm">
-                  <div className="w-10 h-10 rounded-full overflow-hidden">
-                    <img 
-                      src={profileImage} 
-                      alt="Profile" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <div className="font-medium text-[#26231E] text-sm">{user?.name || 'User'}</div>
-                    <div className="text-[#75716B] text-xs">Profile</div>
-                  </div>
-                </div>
                 
                 {/* Navigation Links */}
-                <div className="space-y-2">
+                <div className="space-y-2 border border-red-500 pb-4">
                   <button className="w-full flex items-center gap-4 p-4 text-left hover:bg-white hover:rounded-xl hover:shadow-sm transition-all">
                     <div className="w-5 h-5 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#26231E]" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-[#43403B]" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                       </svg>
                     </div>
-                    <span className="text-[#26231E] font-medium">Profile</span>
+                    <span className="font-['Poppins'] font-medium text-base leading-6 text-[#43403B]">Profile</span>
                   </button>
                   
                   <button className="w-full flex items-center gap-4 p-4 text-left hover:bg-white hover:rounded-xl hover:shadow-sm transition-all">
@@ -123,7 +214,7 @@ const Profile = () => {
                         <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
                       </svg>
                     </div>
-                    <span className="text-[#75716B]">Reset password</span>
+                    <span className="font-['Poppins'] font-medium text-base leading-6 text-[#75716B]">Reset password</span>
                   </button>
                 </div>
               </nav>
@@ -131,17 +222,19 @@ const Profile = () => {
 
             {/* Main Content */}
             <div className="flex-1">
-              <div className="bg-[#F2F2F2] rounded-2xl p-8 shadow-sm">
+              <div className="w-[550px] h-[652px] bg-[#EFEEEB] rounded-2xl p-[40px] shadow-sm">
                 {/* Profile Picture Section */}
-                <div className="flex items-center gap-6 mb-8">
-                  <div className="w-20 h-20 rounded-full overflow-hidden">
-                    <img 
-                      src={profileImage} 
-                      alt="Profile" 
+                <div className="mb-8 flex items-center gap-6">
+                  <div className="w-[120px] h-[120px] rounded-full overflow-hidden">
+                    <img
+                      src={profileImage}
+                      alt="Profile"
                       className="w-full h-full object-cover"
+                      onError={(e) => (e.target.src = '/imgdefault.png')}
+                      key={formData._updated || 'default'}
                     />
                   </div>
-                  <div>
+                  <div className="flex justify-center items-center">
                     <input
                       type="file"
                       accept="image/*"
@@ -151,7 +244,7 @@ const Profile = () => {
                     />
                     <label
                       htmlFor="profile-upload"
-                      className="inline-block px-4 py-2 bg-white border border-[#DAD6D1] rounded-lg text-[#26231E] hover:bg-[#F5F3F0] transition-colors cursor-pointer text-sm"
+                      className="inline-flex items-center justify-center gap-[6px] w-[255px] h-[48px] px-[40px] py-[12px] bg-white border border-[#75716B] rounded-full text-[#26231E] hover:bg-[#F5F3F0] transition-colors cursor-pointer font-['Poppins'] font-medium text-base leading-6 text-center"
                     >
                       Upload profile picture
                     </label>
@@ -161,7 +254,7 @@ const Profile = () => {
                 {/* Form Fields */}
                 <form onSubmit={handleSave} className="space-y-6">
                   <div>
-                    <label className="block mb-2 font-medium text-[#26231E] text-sm">Name</label>
+                    <label className="block mb-2 font-medium text-[#75716B] text-sm">Name</label>
                     <input
                       type="text"
                       name="name"
@@ -173,7 +266,7 @@ const Profile = () => {
                   </div>
 
                   <div>
-                    <label className="block mb-2 font-medium text-[#26231E] text-sm">Username</label>
+                    <label className="block mb-2 font-medium text-[#75716B] text-sm">Username</label>
                     <input
                       type="text"
                       name="username"
@@ -197,11 +290,11 @@ const Profile = () => {
                     />
                   </div>
 
-                  <div className="pt-4">
+                  <div className="pt-4 flex items-center justify-start">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-6 py-3 bg-[#333333] text-white rounded-xl hover:bg-[#444444] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      className="w-[141px] h-[48px] rounded-[999px] bg-[#26231E] px-[40px] py-[12px] font-poppins font-medium text-base leading-6 text-white hover:bg-[#3A342E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? 'Saving...' : 'Save'}
                     </button>

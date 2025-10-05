@@ -75,19 +75,22 @@ export default function Navigation() {
                   >
                     <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                       <img 
-                        src="/imgdefault.png" 
+                        src={
+                          user?.avatar_url && 
+                          user.avatar_url.startsWith('https://') && 
+                          user.avatar_url.includes('supabase.co') &&
+                          user.avatar_url.includes('/storage/v1/object/public/')
+                            ? user.avatar_url 
+                            : "/imgdefault.png"
+                        } 
                         alt="Profile" 
                         className="w-full h-full object-cover"
+                        onLoad={() => console.log('Nav image loaded:', user?.avatar_url || "/imgdefault.png")}
                         onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.classList.remove('hidden');
+                          console.log('Nav image failed:', user?.avatar_url || "/imgdefault.png");
+                          e.target.src = "/imgdefault.png";
                         }}
                       />
-                      <div className="w-full h-full bg-gray-300 rounded-full items-center justify-center hidden">
-                        <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>
-                      </div>
                     </div>
                     <span className="font-medium text-gray-800 text-sm">
                       {user.name || user.username}
@@ -179,15 +182,22 @@ export default function Navigation() {
                     <div className="flex items-center space-x-3 mb-6 px-2">
                       <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                         <img 
-                          src="/imgdefault.png" 
+                          src={
+                            user?.avatar_url && 
+                            user.avatar_url.startsWith('https://') && 
+                            user.avatar_url.includes('supabase.co') &&
+                            user.avatar_url.includes('/storage/v1/object/public/')
+                              ? user.avatar_url 
+                              : "/imgdefault.png"
+                          } 
                           alt="Profile" 
                           className="w-full h-full object-cover"
+                          onLoad={() => console.log('Mobile nav image loaded:', user?.avatar_url || "/imgdefault.png")}
+                          onError={(e) => {
+                            console.log('Mobile nav image failed:', user?.avatar_url || "/imgdefault.png");
+                            e.target.src = "/imgdefault.png";
+                          }}
                         />
-                        <div className="w-full h-full bg-gray-300 rounded-full items-center justify-center hidden">
-                          <svg className="w-8 h-8 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                          </svg>
-                        </div>
                       </div>
                       <div>
                         <p className="font-medium text-lg text-gray-800">
