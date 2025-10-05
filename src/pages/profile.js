@@ -227,7 +227,10 @@ const Profile = () => {
                     <span className="font-['Poppins'] font-medium text-base leading-6 text-[#43403B]">Profile</span>
                   </button>
                   
-                  <button className="w-full flex items-center gap-4 p-4 text-left hover:bg-white hover:rounded-xl hover:shadow-sm transition-all">
+                  <button 
+                    onClick={() => router.push('/reset-password')}
+                    className="w-full flex items-center gap-4 p-4 text-left hover:bg-white hover:rounded-xl hover:shadow-sm transition-all"
+                  >
                     <div className="w-5 h-5 flex items-center justify-center">
                       <svg className="w-5 h-5 text-[#75716B]" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
