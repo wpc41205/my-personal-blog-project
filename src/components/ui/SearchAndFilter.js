@@ -90,7 +90,7 @@ const SearchAndFilter = ({
               </div>
             ) : searchKeyword.trim().length > 0 ? (
               <div className="p-4 text-center text-gray-500 text-sm">
-                No articles found for "{searchKeyword}"
+                No articles found for &ldquo;{searchKeyword}&rdquo;
               </div>
             ) : null}
           </div>

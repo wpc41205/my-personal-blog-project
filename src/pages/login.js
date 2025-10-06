@@ -86,7 +86,7 @@ const Login = () => {
           </form>
 
           <p className="text-center text-sm mt-2 text-[#75716B]">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <button 
               onClick={() => router.push('/register')} 
               className="underline font-poppins font-medium text-[16px] leading-[24px] tracking-[0] text-[#26231E] hover:text-[#75716B] transition-colors"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import Navigation from '../../components/layout/Navigation';
@@ -203,7 +204,7 @@ const ViewPost = () => {
         <Navigation />
         <div className="flex-1 flex flex-col items-center justify-center">
           <h1 className="text-2xl font-semibold text-[#26231E] mb-4">Post Not Found</h1>
-          <p className="text-[#75716B] mb-6">The post you're looking for doesn't exist.</p>
+          <p className="text-[#75716B] mb-6">The post you&apos;re looking for doesn&apos;t exist.</p>
           <Button
             variant="primary"
             size="large"
@@ -226,9 +227,11 @@ const ViewPost = () => {
       {/* Hero Image Section */}
       <section className="relative w-[90vw] md:w-[80vw] lg:w-[60vw] h-[260px] sm:h-[320px] md:h-[450px] lg:h-[587px] overflow-hidden rounded-[16px] mx-auto mt-[40px] md:mt-[60px]">
         {post.image && (
-          <img
+          <Image
             src={post.image}
             alt={post.title}
+            width={800}
+            height={587}
             className="w-full h-full object-cover"
           />
         )}
@@ -350,9 +353,11 @@ const ViewPost = () => {
                       key={comment.id} 
                       className={`flex gap-4 ${index < comments.length - 1 ? 'pb-6 border-b border-dotted border-[#DAD6D1]' : ''}`}
                     >
-                      <img
+                      <Image
                         src={comment.user?.avatar_url || "/imgdefault.png"}
                         alt={comment.user?.name || "User"}
+                        width={48}
+                        height={48}
                         className="w-12 h-12 rounded-full object-cover"
                       />
                       <div className="flex-1">
@@ -390,15 +395,12 @@ const ViewPost = () => {
           <aside className="lg:ml-auto">
             <div className="lg:sticky top-8 border border-[#DAD6D1] w-full md:w-[305px] h-auto md:h-[400px] opacity-100 rounded-2xl p-6 bg-[#EFEEEB]">
               <div className="flex items-start gap-5">
-                <img
+                <Image
                   src="/me.jpg"
                   alt="Pataveekorn C."
+                  width={44}
+                  height={44}
                   className="w-11 h-11 object-cover flex-shrink-0 rounded-full opacity-100"
-                  onError={(e) => {
-                    console.error('Author image failed to load:', e.target.src);
-                    e.target.src = '/imgdefault.png';
-                  }}
-                  onLoad={() => console.log('Author image loaded successfully')}
                 />
                 <div className="flex-1">
                   <div className="text-sm text-[#75716B] mb-1">Author</div>
@@ -415,7 +417,7 @@ const ViewPost = () => {
                   emotional intelligence, and mental well-being.
                 </p>
                 <p>
-                  When I'm reading or learning, 
+                  When I&apos;m reading or learning, 
                   I focus on applying these concepts to my daily life, 
                   striving to become a better version of myself.
                 </p>

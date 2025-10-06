@@ -2,6 +2,7 @@
 // Contains logo, menu items and mobile navigation
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -89,7 +90,7 @@ export default function Navigation() {
                     className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
-                      <img 
+                      <Image 
                         src={
                           user?.avatar_url && 
                           user.avatar_url.startsWith('https://') && 
@@ -99,12 +100,9 @@ export default function Navigation() {
                             : "/imgdefault.png"
                         } 
                         alt="Profile" 
+                        width={32}
+                        height={32}
                         className="w-full h-full object-cover"
-                        onLoad={() => console.log('Nav image loaded:', user?.avatar_url || "/imgdefault.png")}
-                        onError={(e) => {
-                          console.log('Nav image failed:', user?.avatar_url || "/imgdefault.png");
-                          e.target.src = "/imgdefault.png";
-                        }}
                       />
                     </div>
                     <span className="font-medium text-gray-800 text-sm">
@@ -215,7 +213,7 @@ export default function Navigation() {
                   <>
                     <div className="flex items-center space-x-3 mb-6 px-2">
                       <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
-                        <img 
+                        <Image 
                           src={
                             user?.avatar_url && 
                             user.avatar_url.startsWith('https://') && 
@@ -225,12 +223,9 @@ export default function Navigation() {
                               : "/imgdefault.png"
                           } 
                           alt="Profile" 
+                          width={48}
+                          height={48}
                           className="w-full h-full object-cover"
-                          onLoad={() => console.log('Mobile nav image loaded:', user?.avatar_url || "/imgdefault.png")}
-                          onError={(e) => {
-                            console.log('Mobile nav image failed:', user?.avatar_url || "/imgdefault.png");
-                            e.target.src = "/imgdefault.png";
-                          }}
                         />
                       </div>
                       <div>

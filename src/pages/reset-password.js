@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
 import Navigation from '../components/layout/Navigation';
 import Footer from '../components/layout/Footer';
 import { useAuth } from '../contexts/AuthContext';
@@ -249,13 +250,12 @@ const ResetPassword = () => {
         <div className="w-full max-w-5xl mx-auto mb-6">
           <div className="flex items-center gap-3 p-4">
             <div className="w-[60px] h-[60px] rounded-full overflow-hidden">
-              <img 
+              <Image 
                 src={user?.avatar_url || '/imgdefault.png'} 
                 alt="Profile" 
+                width={60}
+                height={60}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = '/imgdefault.png';
-                }}
               />
             </div>
             <span className="font-['Poppins'] font-semibold text-2xl leading-8 text-[#8B7355]">{user?.name || 'User'}</span>

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 /**
  * ArticleCard component for displaying individual blog articles
@@ -12,9 +13,11 @@ const ArticleCard = ({ article }) => {
       <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
         <div className="h-[360px] bg-gray-200 overflow-hidden">
           {article.image ? (
-            <img
+            <Image
               src={article.image}
               alt={article.title}
+              width={400}
+              height={360}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
@@ -48,15 +51,12 @@ const ArticleCard = ({ article }) => {
         <div className="flex items-center gap-3 text-sm text-[#75716B]">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
-              <img 
+              <Image 
                 src="/me.jpg" 
                 alt="Author" 
+                width={24}
+                height={24}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  console.error('ArticleCard author image failed to load:', e.target.src);
-                  e.target.src = '/imgdefault.png';
-                }}
-                onLoad={() => console.log('ArticleCard author image loaded successfully')}
               />
             </div>
             <span className="font-medium">{article.author}</span>

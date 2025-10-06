@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 // Import image from public folder
 
 /**
@@ -25,7 +26,7 @@ const HeroSection = () => {
         {/* Center Section - Image */}
         <div className="flex-1 flex justify-center items-center md:px-4 mb-8 md:mb-0 max-w-md">
           <div className="w-[386px] h-[529px] rounded-2xl border-2 border-gray-300 overflow-hidden">
-                <img src="/me.jpg" alt="Profile" className="w-full h-full object-cover" loading="lazy" />
+                <Image src="/me.jpg" alt="Profile" width={386} height={529} className="w-full h-full object-cover" />
           </div>
         </div>
 
@@ -35,7 +36,7 @@ const HeroSection = () => {
           <h2 className="text-2xl font-semibold text-[#43403B] mb-4 leading-8 font-['Poppins']">Pataveekorn C.</h2>
           <div className="space-y-3 text-[#75716B] max-w-[540px] md:max-w-[347px] text-center md:text-left">
             <p className="text-base font-medium leading-6 font-['Poppins']">
-              "I am passionate about psychology and personal development, 
+              &ldquo;I am passionate about psychology and personal development, 
               always seeking ways to grow and improve. 
               I love reading books that provide new perspectives and insights into self-growth, 
               emotional intelligence, and mental well-being.

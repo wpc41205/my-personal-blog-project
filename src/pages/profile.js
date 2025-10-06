@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
 import Navigation from '../components/layout/Navigation';
 import Footer from '../components/layout/Footer';
 import { useAuth } from '../contexts/AuthContext';
@@ -194,13 +195,12 @@ const Profile = () => {
         <div className="w-full max-w-5xl mx-auto mb-6">
           <div className="flex items-center gap-3 p-4">
             <div className="w-[60px] h-[60px] rounded-full overflow-hidden">
-              <img 
+              <Image 
                 src={profileImage} 
                 alt="Profile" 
+                width={60}
+                height={60}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = '/imgdefault.png';
-                }}
                 key={formData._updated || 'default'} // Force re-render when updated
               />
             </div>
@@ -248,11 +248,12 @@ const Profile = () => {
                 {/* Profile Picture Section */}
                 <div className="mb-8 flex items-center gap-6">
                   <div className="w-[120px] h-[120px] rounded-full overflow-hidden">
-                    <img
+                    <Image
                       src={profileImage}
                       alt="Profile"
+                      width={120}
+                      height={120}
                       className="w-full h-full object-cover"
-                      onError={(e) => (e.target.src = '/imgdefault.png')}
                       key={formData._updated || 'default'}
                     />
                   </div>

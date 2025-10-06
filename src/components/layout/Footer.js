@@ -23,9 +23,9 @@ const Footer = () => {
           </div>
         </div>
         <div className="flex items-center">
-          <a href="/" className="font-semibold text-[#75716B] hover:text-[#26231E] transition-colors">
+          <Link href="/" className="font-semibold text-[#75716B] hover:text-[#26231E] transition-colors">
             Home page
-          </a>
+          </Link>
         </div>
       </div>
     </footer>
