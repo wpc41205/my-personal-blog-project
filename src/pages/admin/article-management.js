@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import Link from 'next/link';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import AdminSidebar from '@/components/admin/AdminSidebar';
 
 const ArticleManagement = () => {
   const router = useRouter();
@@ -74,78 +75,6 @@ const ArticleManagement = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
-    toast.success('Logged out successfully');
-    router.push('/admin/login');
-  };
-
-  // Admin Sidebar Component
-  const AdminSidebar = () => (
-    <div className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col h-screen">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#26231E]">hh.</h1>
-        <p className="text-sm text-[#8B7355]">Admin panel</p>
-      </div>
-      
-      <nav className="flex-1 space-y-2">
-        <Link href="/admin/article-management" className="flex items-center p-3 rounded-lg bg-gray-100 text-[#26231E] font-medium">
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Article management
-        </Link>
-        
-        <a href="/admin/category-management" className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-          </svg>
-          Category management
-        </a>
-        
-        <a href="/admin/profile" className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          Profile
-        </a>
-        
-        <a href="/admin/notifications" className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-          Notification
-        </a>
-        
-        <a href="/admin/reset-password" className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004 12c0 2.21.81 4.209 2.192 5.791M18 9v2.356M18 11.004h.008m0 0H12m6 0a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          Reset password
-        </a>
-      </nav>
-      
-      <div className="mt-auto pt-6 border-t border-gray-200 space-y-2">
-        <Link href="/" className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-          hh. website
-        </Link>
-        
-        <button
-          onClick={handleLogout}
-          className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50 w-full text-left"
-        >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Log out
-        </button>
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (
@@ -156,12 +85,14 @@ const ArticleManagement = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F9F8F5]">
+    <SidebarProvider defaultOpen={true}>
       <AdminSidebar />
-
-      <main className="flex-1 p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-[#26231E]">Article management</h2>
+      <SidebarInset>
+        <header className="w-full h-[96px] opacity-100 left-[280px] pt-6 pr-[60px] pb-6 pl-[60px] gap-10 border-b border-[#DAD6D1] bg-[#F9F8F6] flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <SidebarTrigger className="-ml-1" />
+            <h2 className="text-2xl font-bold text-[#26231E]">Article management</h2>
+          </div>
           <button
             onClick={handleCreateArticle}
             className="bg-[#26231E] text-white px-6 py-3 rounded-full flex items-center hover:bg-[#3A342E] transition-colors"
@@ -171,18 +102,20 @@ const ArticleManagement = () => {
             </svg>
             Create article
           </button>
-        </div>
+        </header>
+        
+        <main className="flex-1 px-12 py-8 bg-[#F9F8F6]">
 
-        <div className="flex items-center space-x-4 mb-6">
+        <div className="flex items-center space-x-4 mb-6 pr-8">
           <div className="relative flex-1">
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B7355]"
+              className="w-[360px] h-[48px] rounded-lg pt-3 pr-3 pb-3 pl-10 gap-1 border border-[#DAD6D1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B7355]"
             />
-            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -190,7 +123,7 @@ const ArticleManagement = () => {
           <select
             value={statusFilter}
             onChange={handleStatusFilterChange}
-            className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B7355]"
+            className="w-[200px] h-[48px] rounded-lg pt-3 pr-12 pb-3 pl-3 gap-1 border border-[#DAD6D1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B7355] appearance-none bg-no-repeat bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzY2NjY2NiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+')] bg-[length:12px] bg-[center_right_20px]"
           >
             <option value="All">Status</option>
             <option value="Published">Published</option>
@@ -200,7 +133,7 @@ const ArticleManagement = () => {
           <select
             value={categoryFilter}
             onChange={handleCategoryFilterChange}
-            className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B7355]"
+            className="w-[200px] h-[48px] rounded-lg pt-3 pr-12 pb-3 pl-3 gap-1 border border-[#DAD6D1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B7355] appearance-none bg-no-repeat bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzY2NjY2NiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+')] bg-[length:12px] bg-[center_right_20px]"
           >
             <option value="All">Category</option>
             <option value="Cat">Cat</option>
@@ -210,16 +143,16 @@ const ArticleManagement = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-base font-medium text-[#75716B] w-2/5">
                   Article title
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                <th scope="col" className="px-6 py-3 text-left text-base font-medium text-[#75716B] w-32">
                   Category
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                <th scope="col" className="px-6 py-3 text-left text-base font-medium text-[#75716B] w-32">
                   Status
                 </th>
                 <th scope="col" className="relative px-6 py-3 w-24">
@@ -227,40 +160,45 @@ const ArticleManagement = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
               {loading ? (
-                <tr>
+                <tr className="bg-white">
                   <td colSpan="4" className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                     Loading articles...
                   </td>
                 </tr>
               ) : filteredArticles.length === 0 ? (
-                <tr>
+                <tr className="bg-white">
                   <td colSpan="4" className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                     No articles found.
                   </td>
                 </tr>
               ) : (
-                filteredArticles.map((article) => (
-                  <tr key={article.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {article.title}
+                filteredArticles.map((article, index) => (
+                  <tr key={article.id} className={index % 2 === 0 ? "bg-[#EFEEEB]" : "bg-[#F9F8F6]"}>
+                    <td className="px-6 py-4 max-w-xs">
+                      <div className="truncate text-[#43403B] font-['Poppins'] font-medium text-base leading-6" title={article.title}>
+                        {article.title}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {article.category}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-[#43403B] font-['Poppins'] font-medium text-base leading-6">
+                        {article.category}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${article.status === 'Published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                        • {article.status}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center text-green-600 font-['Poppins'] font-medium text-base leading-6">
+                        <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        {article.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => handleEditArticle(article.id)} className="text-indigo-600 hover:text-indigo-900 mr-3">
+                      <button onClick={() => handleEditArticle(article.id)} className="mr-3 text-[#26231E] hover:text-[#8B7355]">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
-                      <button onClick={() => handleDeleteArticle(article.id)} className="text-red-600 hover:text-red-900">
+                      <button onClick={() => handleDeleteArticle(article.id)} className="text-[#26231E] hover:text-red-600">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -272,8 +210,9 @@ const ArticleManagement = () => {
             </tbody>
           </table>
         </div>
-      </main>
-    </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 
