@@ -32,7 +32,7 @@ const ArticleGrid = () => {
       setIsLoading(true);
       const nextPage = currentPage + 1;
       
-      // ใช้ category parameter เฉพาะเมื่อไม่ใช่ Highlight
+      // Use category parameter only when not Highlight
       const categoryParam = activeCategory === "highlight" ? "" : activeCategory;
       
       const response = await fetchBlogPosts({
@@ -41,11 +41,11 @@ const ArticleGrid = () => {
         category: categoryParam
       });
       
-      // รวมโพสต์ใหม่กับโพสต์เดิม
+      // Combine new posts with existing posts
       setArticles(prevArticles => [...prevArticles, ...response.posts]);
       setCurrentPage(nextPage);
       
-      // ตรวจสอบว่าได้ข้อมูลหน้าสุดท้ายแล้วหรือยัง
+      // Check if we have reached the last page
       if (response.currentPage >= response.totalPages) {
         setHasMore(false);
       }
@@ -65,7 +65,7 @@ const ArticleGrid = () => {
         setCurrentPage(1);
         setHasMore(true);
         
-        // ใช้ category parameter เฉพาะเมื่อไม่ใช่ Highlight
+        // Use category parameter only when not Highlight
         const categoryParam = activeCategory === "highlight" ? "" : activeCategory;
         
         const [postsData, categoriesData] = await Promise.all([
@@ -81,7 +81,7 @@ const ArticleGrid = () => {
         setCategories(categoriesData);
         setError(null);
         
-        // ตรวจสอบว่าได้ข้อมูลหน้าสุดท้ายแล้วหรือยัง
+        // Check if we have reached the last page
         if (postsData.currentPage >= postsData.totalPages) {
           setHasMore(false);
         }

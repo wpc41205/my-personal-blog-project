@@ -23,10 +23,13 @@ const Login = () => {
 
     try {
       setIsSubmitting(true);
+      setError(''); // Clear previous errors
       await login({ email, password });
       router.push('/');
     } catch (err) {
-      setError('Login failed. Please check your credentials and try again.');
+      console.error('Login error:', err);
+      // Use the error message from AuthContext
+      setError(err.message || 'Unable to log in. Please check your credentials and try again.');
     } finally {
       setIsSubmitting(false);
     }

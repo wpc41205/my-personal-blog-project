@@ -2,12 +2,16 @@
 // Contains logo, menu items and mobile navigation
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'sonner';
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -19,10 +23,21 @@ export default function Navigation() {
 
   const handleLogout = async () => {
     try {
+      setIsLoggingOut(true);
       await logout();
       setIsUserMenuOpen(false);
+      setIsMobileMenuOpen(false);
+      
+      // Show success message
+      toast.success('Logged out successfully!');
+      
+      // Navigate to login page after successful logout
+      router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
+      toast.error('Unable to log out. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -113,25 +128,44 @@ export default function Navigation() {
                           <span className="font-medium">Profile</span>
                         </button>
                       </Link>
-                      <button className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3 transition-colors">
-                        <div className="w-5 h-5 flex items-center justify-center">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                          </svg>
-                        </div>
-                        <span className="font-medium">Reset password</span>
-                      </button>
+                      <Link href="/reset-password">
+                        <button 
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                          </div>
+                          <span className="font-medium">Reset password</span>
+                        </button>
+                      </Link>
                       <div className="border-t border-gray-100 my-1"></div>
                       <button 
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3 transition-colors"
+                        disabled={isLoggingOut}
+                        className={`w-full text-left px-4 py-3 text-sm flex items-center space-x-3 transition-colors ${
+                          isLoggingOut 
+                            ? 'text-gray-400 cursor-not-allowed' 
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
                       >
                         <div className="w-5 h-5 flex items-center justify-center">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
+                          {isLoggingOut ? (
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                          )}
                         </div>
-                        <span className="font-medium">Log out</span>
+                        <span className="font-medium">
+                          {isLoggingOut ? 'Logging out...' : 'Log out'}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -219,17 +253,40 @@ export default function Navigation() {
                         <span>Profile</span>
                       </button>
                     </Link>
+                    <Link href="/reset-password" className="w-full">
+                      <button 
+                        className="w-full max-w-[327px] h-[48px] rounded-xl border border-gray-200 bg-white px-6 py-3 font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                        <span>Reset password</span>
+                      </button>
+                    </Link>
                     <button 
-                      className="w-full max-w-[327px] h-[48px] rounded-xl bg-gray-900 px-6 py-3 font-medium text-white hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2"
+                      disabled={isLoggingOut}
+                      className={`w-full max-w-[327px] h-[48px] rounded-xl px-6 py-3 font-medium transition-colors flex items-center justify-center space-x-2 ${
+                        isLoggingOut 
+                          ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
+                          : 'bg-gray-900 text-white hover:bg-gray-800'
+                      }`}
                       onClick={() => {
                         handleLogout();
                         setIsMobileMenuOpen(false);
                       }}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      <span>Log out</span>
+                      {isLoggingOut ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                      )}
+                      <span>{isLoggingOut ? 'Logging out...' : 'Log out'}</span>
                     </button>
                   </>
                 ) : (

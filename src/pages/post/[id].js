@@ -9,7 +9,7 @@ import { LoadingState, ErrorState } from '../../components/ui/LoadingStates';
 import { LikeIcon, CopyLinkIcon, FacebookIcon, LinkedInIcon, TwitterIcon } from '../../components/ui/Icons';
 import { getBlogPost, toggleLike, getLikeCount, checkUserLike, addComment, getComments } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import meImage from '../../../public/imgdefault.png';
+// import meImage from '../../../public/me.jpg';
 
 /**
  * ViewPost component - Display individual blog post details
@@ -391,9 +391,14 @@ const ViewPost = () => {
             <div className="lg:sticky top-8 border border-[#DAD6D1] w-full md:w-[305px] h-auto md:h-[400px] opacity-100 rounded-2xl p-6 bg-[#EFEEEB]">
               <div className="flex items-start gap-5">
                 <img
-                  src={meImage}
+                  src="/me.jpg"
                   alt="Pataveekorn C."
                   className="w-11 h-11 object-cover flex-shrink-0 rounded-full opacity-100"
+                  onError={(e) => {
+                    console.error('Author image failed to load:', e.target.src);
+                    e.target.src = '/imgdefault.png';
+                  }}
+                  onLoad={() => console.log('Author image loaded successfully')}
                 />
                 <div className="flex-1">
                   <div className="text-sm text-[#75716B] mb-1">Author</div>

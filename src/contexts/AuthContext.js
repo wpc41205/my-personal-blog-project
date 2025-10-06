@@ -77,7 +77,18 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (authError) {
-        throw new Error(authError.message);
+        // Handle specific error cases with user-friendly messages
+        let errorMessage = authError.message;
+        
+        if (authError.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password';
+        } else if (authError.message.includes('Email not confirmed')) {
+          errorMessage = 'Please confirm your email before logging in';
+        } else if (authError.message.includes('Too many requests')) {
+          errorMessage = 'Too many login attempts. Please wait a moment';
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Get user profile from users table

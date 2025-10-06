@@ -4,6 +4,7 @@ import Navigation from '../components/layout/Navigation';
 import Footer from '../components/layout/Footer';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
+import { resetPassword, logoutUser } from '../services/api';
 
 const ResetPassword = () => {
   const { user, loading } = useAuth();
@@ -120,7 +121,7 @@ const ResetPassword = () => {
     return errors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -134,13 +135,16 @@ const ResetPassword = () => {
       return;
     }
 
-    // Show loading message
-    toast.loading('Verifying current password...');
+    try {
+      // Show loading message
+      const loadingToast = toast.loading('Verifying current password...');
 
-    // Simulate API call
-    setTimeout(() => {
-      toast.dismiss(); // Remove loading toast
-      toast.success('Password updated successfully!');
+      // Call the reset password API
+      const result = await resetPassword(formData.currentPassword, formData.newPassword);
+      
+      // Dismiss loading toast and show success message
+      toast.dismiss(loadingToast);
+      toast.success(result.message || 'Password updated successfully!');
       
       // Reset form
       setFormData({
@@ -148,8 +152,73 @@ const ResetPassword = () => {
         newPassword: '',
         confirmPassword: ''
       });
+      setValidationErrors({});
+      
+      // Show additional success message about needing to re-login
+      setTimeout(() => {
+        toast.info('Password updated successfully! Please log out and log back in with your new password.', {
+          duration: 5000,
+          action: {
+            label: 'Logout Now',
+            onClick: async () => {
+              try {
+                await logoutUser();
+                router.push('/login');
+              } catch (error) {
+                console.error('Logout error:', error);
+                toast.error('Failed to logout. Please try again.');
+              }
+            }
+          }
+        });
+      }, 2000);
+      
+    } catch (error) {
+      // Dismiss loading toast and show error message
+      toast.dismiss();
+      console.error('Password reset error:', error);
+      
+      // Show more specific error messages
+      let errorMessage = 'Unable to update password. Please try again.';
+      
+      if (error.message) {
+        // Use the error message from API (already in Thai)
+        errorMessage = error.message;
+      } else if (error.code) {
+        switch (error.code) {
+          case 'INVALID_CREDENTIALS':
+            errorMessage = 'Current password is incorrect';
+            break;
+          case 'WEAK_PASSWORD':
+            errorMessage = 'New password is not strong enough. Please choose a stronger password';
+            break;
+          case 'NETWORK_ERROR':
+            errorMessage = 'Network error. Please check your connection and try again';
+            break;
+          default:
+            errorMessage = error.message || errorMessage;
+        }
+      }
+      
+      // Show error toast
+      toast.error(errorMessage, {
+        duration: 5000,
+        action: {
+          label: 'Try Again',
+          onClick: () => {
+            // Clear form and focus on current password field
+            setFormData({
+              currentPassword: '',
+              newPassword: '',
+              confirmPassword: ''
+            });
+            setValidationErrors({});
+          }
+        }
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 2000);
+    }
   };
 
   if (loading) {
@@ -280,7 +349,7 @@ const ResetPassword = () => {
                     {validationErrors.newPassword && (
                       <p className="mt-1 text-sm text-red-600">{validationErrors.newPassword}</p>
                     )}
-                    {formData.newPassword && !validationErrors.newPassword && (
+                    {formData.newPassword && (
                       <div className="mt-2">
                         <div className="text-xs text-[#75716B] mb-1">Password strength:</div>
                         <div className="flex gap-1">
@@ -296,6 +365,9 @@ const ResetPassword = () => {
                           <div className={`h-1 flex-1 rounded ${
                             /(?=.*\d)/.test(formData.newPassword) ? 'bg-green-400' : 'bg-gray-200'
                           }`}></div>
+                        </div>
+                        <div className="text-xs text-[#75716B] mt-1">
+                          Requirements: At least 6 characters, one uppercase, one lowercase, one number
                         </div>
                       </div>
                     )}

@@ -720,6 +720,107 @@ export const getComments = async (postId) => {
 };
 
 /**
+ * Reset user password using Supabase Auth
+ * @param {string} currentPassword - Current password
+ * @param {string} newPassword - New password
+ * @returns {Promise<Object>} Success response
+ */
+export const resetPassword = async (currentPassword, newPassword) => {
+  try {
+    console.log('Starting password reset process...');
+    
+    // Validate input parameters
+    if (!currentPassword || !newPassword) {
+      throw new Error('Both current and new passwords are required');
+    }
+
+    if (currentPassword === newPassword) {
+      throw new Error('New password must be different from current password');
+    }
+
+    // Get current user session
+    const { data: currentUser, error: getUserError } = await supabase.auth.getUser();
+    
+    if (getUserError) {
+      console.error('Get user error:', getUserError);
+      throw new Error('Failed to verify user session. Please try logging in again.');
+    }
+
+    if (!currentUser.user || !currentUser.user.email) {
+      throw new Error('User not authenticated. Please log in again.');
+    }
+
+    // Create timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout. Please try again.')), 10000);
+    });
+
+    // Verify current password by attempting to sign in with it (with timeout)
+    console.log('Verifying current password...');
+    const verifyPromise = supabase.auth.signInWithPassword({
+      email: currentUser.user.email,
+      password: currentPassword
+    });
+
+    const { error: verifyError } = await Promise.race([verifyPromise, timeoutPromise]);
+
+    if (verifyError) {
+      console.error('Password verification error:', verifyError);
+      
+      // Handle specific error cases
+      if (verifyError.message.includes('Invalid login credentials')) {
+        throw new Error('Current password is incorrect');
+      } else if (verifyError.message.includes('Email not confirmed')) {
+        throw new Error('Please confirm your email before changing password');
+      } else if (verifyError.message.includes('Request timeout')) {
+        throw new Error('Request timeout. Please check your connection and try again');
+      } else {
+        throw new Error('Unable to verify current password. Please try again');
+      }
+    }
+
+    // Update the password (with timeout)
+    console.log('Updating password...');
+    const updatePromise = supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    const { data, error } = await Promise.race([updatePromise, timeoutPromise]);
+
+    if (error) {
+      console.error('Password update error:', error);
+      
+      // Handle specific password update errors
+      if (error.message.includes('Password should be at least')) {
+        throw new Error('New password does not meet minimum requirements');
+      } else if (error.message.includes('same as the old password')) {
+        throw new Error('New password must be different from current password');
+      } else if (error.message.includes('Request timeout')) {
+        throw new Error('Request timeout. Please check your connection and try again');
+      } else {
+        throw new Error(error.message || 'Unable to update password. Please try again');
+      }
+    }
+
+    console.log('Password updated successfully');
+    return { 
+      success: true, 
+      message: 'Password changed successfully! Please log out and log back in with your new password',
+      user: data.user 
+    };
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    
+    // Re-throw with better error messages
+    if (error.message.includes('Network error') || error.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection and try again.');
+    }
+    
+    throw error;
+  }
+};
+
+/**
  * Get categories from API or return mock categories
  * @returns {Promise<Array>} Array of categories
  */

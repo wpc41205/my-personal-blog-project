@@ -49,9 +49,14 @@ const ArticleCard = ({ article }) => {
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
               <img 
-                src="/imgdefault.png" 
+                src="/me.jpg" 
                 alt="Author" 
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error('ArticleCard author image failed to load:', e.target.src);
+                  e.target.src = '/imgdefault.png';
+                }}
+                onLoad={() => console.log('ArticleCard author image loaded successfully')}
               />
             </div>
             <span className="font-medium">{article.author}</span>
