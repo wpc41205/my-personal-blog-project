@@ -915,26 +915,139 @@ export const resetPassword = async (currentPassword, newPassword) => {
  */
 export const fetchCategories = async () => {
   try {
-    // Since categories endpoint doesn't exist, extract categories from posts
-    const response = await fetch(`${API_BASE_URL}/posts?page=1&limit=30`);
+    // Fetch from Supabase categories table
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('id', { ascending: true });
     
-    if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+    if (error) {
+      console.error('Supabase error fetching categories:', error);
+      throw new Error(error.message);
     }
     
-    const data = await response.json();
-    const posts = data.posts || data;
-    
-    // Extract unique categories from posts
-    const categories = [...new Set(posts.map(post => post.category))];
-    
     // Return just the category names for admin dropdown
-    return categories;
+    return (data || []).map(cat => cat.name);
   } catch (error) {
     console.error('Error fetching categories:', error.message);
     
-    // Return mock categories if API is not available
-    return ['Cat', 'General', 'Inspiration'];
+    // Fallback: try external API
+    try {
+      const response = await fetch(`${API_BASE_URL}/posts?page=1&limit=30`);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      
+      const apiData = await response.json();
+      const posts = apiData.posts || apiData;
+      
+      // Extract unique categories from posts
+      const categories = [...new Set(posts.map(post => post.category))];
+      return categories;
+    } catch (fallbackError) {
+      console.error('Fallback API also failed:', fallbackError);
+      // Return mock categories if both fail
+      return ['Cat', 'General', 'Inspiration'];
+    }
+  }
+};
+
+/**
+ * Fetch all categories with full details for admin
+ * @returns {Promise<Array>} Array of category objects
+ */
+export const fetchAllCategories = async () => {
+  try {
+    // Fetch from Supabase categories table
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('id', { ascending: true });
+    
+    if (error) {
+      console.error('Supabase error fetching categories:', error);
+      throw new Error(error.message);
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching all categories:', error.message);
+    // Return empty array if fails
+    return [];
+  }
+};
+
+/**
+ * Create a new category
+ * @param {Object} categoryData - Category data
+ * @returns {Promise<Object>} Created category
+ */
+export const createCategory = async (categoryData) => {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([{ name: categoryData.name }])
+      .select()
+      .single();
+    
+    if (error) {
+      throw new Error(`Failed to create category: ${error.message}`);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error creating category:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update a category
+ * @param {number} id - Category ID
+ * @param {Object} categoryData - Updated category data
+ * @returns {Promise<Object>} Updated category
+ */
+export const updateCategory = async (id, categoryData) => {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .update({ name: categoryData.name })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      throw new Error(`Failed to update category: ${error.message}`);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error updating category:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a category
+ * @param {number} id - Category ID
+ * @returns {Promise<boolean>} Success status
+ */
+export const deleteCategory = async (id) => {
+  try {
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      throw new Error(`Failed to delete category: ${error.message}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    throw error;
   }
 };
 
