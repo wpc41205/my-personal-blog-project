@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { getAdminUserByEmail, updateAdminUserByEmail } from '../../services/api';
 
 const AdminProfile = () => {
   const router = useRouter();
@@ -32,17 +33,40 @@ const AdminProfile = () => {
     try {
       const userData = JSON.parse(adminUserData);
       setAdminUser(userData);
-      
-      // Set form data with user information
-      setFormData({
-        name: userData.name || 'Thompson P.',
-        username: userData.username || 'thompson',
-        email: userData.email || 'thompson.p@gmail.com',
-        bio: userData.bio || 'I am a pet enthusiast and freelance writer who specializes in animal behavior and care. With a deep love for cats, I enjoy sharing insights on feline companionship and wellness.\nWhen I\'m not writing, I spends time volunteering at my local animal shelter, helping cats find loving homes.'
-      });
-      if (userData.avatar_url) {
-        setProfileImage(userData.avatar_url);
-      }
+
+      // Prefer loading from Supabase admin_users if available
+      (async () => {
+        try {
+          const row = await getAdminUserByEmail(userData.email);
+          if (row) {
+            setFormData({
+              name: row.name || '',
+              username: row.username || '',
+              email: row.email || userData.email,
+              bio: row.bio || ''
+            });
+            if (row.avatar_url) setProfileImage(row.avatar_url);
+          } else {
+            // Fallback to whatever is in localStorage
+            setFormData({
+              name: userData.name || '',
+              username: userData.username || '',
+              email: userData.email || '',
+              bio: userData.bio || ''
+            });
+            if (userData.avatar_url) setProfileImage(userData.avatar_url);
+          }
+        } catch (err) {
+          // On error, still show local data
+          setFormData({
+            name: userData.name || '',
+            username: userData.username || '',
+            email: userData.email || '',
+            bio: userData.bio || ''
+          });
+          if (userData.avatar_url) setProfileImage(userData.avatar_url);
+        }
+      })();
     } catch (error) {
       console.error('Error parsing admin user data:', error);
       router.push('/admin/login');
@@ -106,21 +130,21 @@ const AdminProfile = () => {
     setIsSubmitting(true);
 
     try {
-      // Persist to localStorage for admin demo scope
-      const adminUserData = localStorage.getItem('adminUser');
-      const existing = adminUserData ? JSON.parse(adminUserData) : {};
-      const payload = {
-        ...existing,
+      // Update in Supabase admin_users using email as key
+      await updateAdminUserByEmail(formData.email, {
         name: formData.name,
         username: formData.username,
-        email: formData.email,
         bio: formData.bio,
-        avatar_url: profileImage || existing.avatar_url,
-        updatedAt: new Date().toISOString()
-      };
+        avatar_url: profileImage
+      });
+
+      // Mirror to localStorage for quick UI load next time
+      const adminUserData = localStorage.getItem('adminUser');
+      const existing = adminUserData ? JSON.parse(adminUserData) : {};
+      const payload = { ...existing, ...formData, avatar_url: profileImage };
       localStorage.setItem('adminUser', JSON.stringify(payload));
       setAdminUser(payload);
-      await new Promise(resolve => setTimeout(resolve, 300));
+
       toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);

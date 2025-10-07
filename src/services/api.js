@@ -1235,6 +1235,66 @@ export const updateArticle = async (id, articleData) => {
 };
 
 /**
+ * Admin users (panel) helpers
+ */
+
+/**
+ * Get admin user by email from admin_users table
+ * @param {string} email
+ * @returns {Promise<Object|null>}
+ */
+export const getAdminUserByEmail = async (email) => {
+  try {
+    if (!email) throw new Error('Email is required');
+    const { data, error } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data || null;
+  } catch (error) {
+    console.error('Error fetching admin user by email:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update admin user row by email
+ * @param {string} email
+ * @param {Object} updates
+ * @returns {Promise<Object>} Updated row
+ */
+export const updateAdminUserByEmail = async (email, updates) => {
+  try {
+    if (!email) throw new Error('Email is required');
+    const sanitized = { ...updates };
+    // Never allow direct password_hash updates from client accidentally
+    delete sanitized.password_hash;
+
+    const { data, error } = await supabase
+      .from('admin_users')
+      .update(sanitized)
+      .eq('email', email)
+      .select('*')
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error updating admin user:', error);
+    throw error;
+  }
+};
+
+/**
  * Delete an article
  * @param {string|number} id - Article ID (with prefix like 'supabase_1' or 'external_1')
  * @returns {Promise<boolean>} Success status
