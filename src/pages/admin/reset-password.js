@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { resetPassword as resetPasswordApi } from '../../services/api';
 
 const AdminResetPassword = () => {
   const router = useRouter();
@@ -86,13 +87,8 @@ const AdminResetPassword = () => {
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // In a real application, you would call your API here
-      // await resetAdminPassword(formData);
-      
-      toast.success('Password updated successfully!');
+      const result = await resetPasswordApi(formData.currentPassword, formData.newPassword);
+      toast.success(result?.message || 'Password updated successfully!');
       
       // Clear form
       setFormData({
@@ -107,7 +103,8 @@ const AdminResetPassword = () => {
       // router.push('/admin/profile');
       
     } catch (error) {
-      toast.error('Failed to update password. Please try again.');
+      const message = error?.message || 'Failed to update password. Please try again.';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -200,7 +197,7 @@ const AdminResetPassword = () => {
           {/* Confirmation Dialog */}
           {showConfirmDialog && (
             <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-[#F9F8F6] rounded-2xl shadow-xl mx-4 w-[477px] h-[256px] pt-4 pr-6 pb-10 pl-6 gap-6 flex flex-col items-center justify-center">
+              <div className="bg-[#F9F8F6] rounded-2xl shadow-xl mx-4 w-[477px] h-[256px] pt-4 pr-6 pb-10 pl-6 gap-6 flex flex-col items-center justify-center relative">
                 {/* Close button */}
                 <button
                   onClick={cancelResetPassword}
@@ -220,14 +217,14 @@ const AdminResetPassword = () => {
                   <div className="flex gap-4 justify-center">
                     <button
                       onClick={cancelResetPassword}
-                      className="px-6 py-3 border border-[#26231E] text-[#26231E] hover:bg-gray-50 transition-colors font-medium rounded-[999px]"
+                      className="px-6 py-3 w-[138px] h-[48px] border border-[#26231E] text-[#26231E] hover:bg-gray-50 transition-colors font-medium rounded-[999px]"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={confirmResetPassword}
                       disabled={loading}
-                      className="px-6 py-3 bg-[#26231E] text-white hover:bg-[#3A342E] transition-colors font-medium rounded-[999px] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-6 py-3 w-[132px] h-[48px] bg-[#26231E] text-white hover:bg-[#3A342E] transition-colors font-medium rounded-[999px] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? 'Resetting...' : 'Reset'}
                     </button>
