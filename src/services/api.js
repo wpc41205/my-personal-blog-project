@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 const API_BASE_URL = 'https://blog-post-project-api.vercel.app';
 
 /**
- * Fetch all blog posts from API
+ * Fetch all blog posts from both Supabase and External API
  * @param {Object} options - Query options
  * @param {number} options.page - Page number (default: 1)
  * @param {number} options.limit - Posts per page (default: 6)
@@ -18,40 +18,129 @@ export const fetchBlogPosts = async (options = {}) => {
   try {
     const { page = 1, limit = 6, category, keyword } = options;
     
-    // Build query parameters
-    const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    // Category ID mapping
+    const categoryIdMap = {
+      'Cat': 1,
+      'General': 2,
+      'Inspiration': 3
+    };
     
+    // Category name mapping (reverse)
+    const categoryNameMap = {
+      1: 'Cat',
+      2: 'General',
+      3: 'Inspiration'
+    };
+    
+    // Fetch from both sources in parallel
+    const [supabasePosts, externalPosts] = await Promise.allSettled([
+      // Fetch from Supabase
+      (async () => {
+        let query = supabase
+          .from('posts')
+          .select('*')
+          .order('date', { ascending: false });
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.warn('Supabase error:', error);
+          return [];
+        }
+        
+        return (data || []).map(post => ({
+          id: `supabase_${post.id}`,
+          originalId: post.id,
+          title: post.title,
+          description: post.description,
+          content: post.content,
+          category: categoryNameMap[post.category_id] || 'General',
+          image: post.image,
+          thumbnail: post.image,
+          date: post.date,
+          likes: post.likes_count || 0,
+          author: 'Pataveekorn C.',
+          status: 'Published',
+          source: 'supabase'
+        }));
+      })(),
+      
+      // Fetch from External API
+      (async () => {
+        const params = new URLSearchParams();
+        params.append('page', '1');
+        params.append('limit', '100'); // Get all from external API
+        
+        const response = await fetch(`${API_BASE_URL}/posts?${params.toString()}`);
+        
+        if (!response.ok) {
+          console.warn('External API error:', response.status);
+          return [];
+        }
+        
+        const data = await response.json();
+        const posts = data.posts || data;
+        
+        return posts.map(post => ({
+          ...post,
+          id: `external_${post.id}`,
+          originalId: post.id,
+          author: post.author === "Thompson P." ? "Pataveekorn C." : post.author,
+          source: 'external'
+        }));
+      })()
+    ]);
+    
+    // Combine results
+    let allPosts = [];
+    
+    if (supabasePosts.status === 'fulfilled') {
+      allPosts = [...allPosts, ...supabasePosts.value];
+    }
+    
+    if (externalPosts.status === 'fulfilled') {
+      allPosts = [...allPosts, ...externalPosts.value];
+    }
+    
+    // Apply filters
+    let filteredPosts = allPosts;
+    
+    // Filter by category
     if (category) {
-      params.append('category', category);
+      filteredPosts = filteredPosts.filter(post => 
+        post.category?.toLowerCase() === category.toLowerCase()
+      );
     }
     
+    // Filter by keyword
     if (keyword) {
-      params.append('keyword', keyword);
+      const keywordLower = keyword.toLowerCase();
+      filteredPosts = filteredPosts.filter(post =>
+        post.title?.toLowerCase().includes(keywordLower) ||
+        post.description?.toLowerCase().includes(keywordLower) ||
+        post.content?.toLowerCase().includes(keywordLower)
+      );
     }
     
-    const response = await fetch(`${API_BASE_URL}/posts?${params.toString()}`);
+    // Sort by date (newest first)
+    filteredPosts.sort((a, b) => {
+      const dateA = new Date(a.date || 0);
+      const dateB = new Date(b.date || 0);
+      return dateB - dateA;
+    });
     
-    if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
-    }
+    // Apply pagination
+    const totalPosts = filteredPosts.length;
+    const totalPages = Math.ceil(totalPosts / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
     
-    const data = await response.json();
-    const posts = data.posts || data;
-    
-    // Replace "Thompson P." with "Pataveekorn C."
-    const updatedPosts = posts.map(post => ({
-      ...post,
-      author: post.author === "Thompson P." ? "Pataveekorn C." : post.author
-    }));
-    
-    // Return pagination response structure
     return {
-      posts: updatedPosts,
-      currentPage: data.currentPage || page,
-      totalPages: data.totalPages || Math.ceil(updatedPosts.length / limit),
-      totalPosts: data.totalPosts || updatedPosts.length
+      posts: paginatedPosts,
+      currentPage: page,
+      totalPages: totalPages,
+      totalPosts: totalPosts
     };
   } catch (error) {
     console.error('Error fetching blog posts:', error.message);
@@ -839,25 +928,246 @@ export const fetchCategories = async () => {
     // Extract unique categories from posts
     const categories = [...new Set(posts.map(post => post.category))];
     
-    // Create category options with highlight as first option
-    const categoryOptions = [
-      { value: 'highlight', label: 'Highlight' },
-      ...categories.map(category => ({
-        value: category.toLowerCase(),
-        label: category
-      }))
-    ];
-    
-    return categoryOptions;
+    // Return just the category names for admin dropdown
+    return categories;
   } catch (error) {
     console.error('Error fetching categories:', error.message);
     
     // Return mock categories if API is not available
-    return [
-      { value: 'highlight', label: 'Highlight' },
-      { value: 'cat', label: 'Cat' },
-      { value: 'inspiration', label: 'Inspiration' },
-      { value: 'general', label: 'General' }
-    ];
+    return ['Cat', 'General', 'Inspiration'];
+  }
+};
+
+/**
+ * Admin API functions for article management
+ */
+
+/**
+ * Create a new article
+ * @param {Object} articleData - Article data
+ * @returns {Promise<Object>} Created article
+ */
+export const createArticle = async (articleData) => {
+  try {
+    console.log('Creating article with data:', articleData);
+    
+    // Handle thumbnail image - convert to base64 or use default
+    let imageUrl = '/imgdefault.png';
+    
+    if (articleData.thumbnail && typeof articleData.thumbnail === 'object') {
+      try {
+        // Convert to base64 for storage in database
+        imageUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(articleData.thumbnail);
+        });
+      } catch (uploadErr) {
+        console.error('Image conversion failed, using default:', uploadErr);
+      }
+    } else if (articleData.thumbnail && typeof articleData.thumbnail === 'string') {
+      // If thumbnail is already a string (URL or base64), use it
+      imageUrl = articleData.thumbnail;
+    }
+    
+    // Map category name to category_id (you may need to adjust this mapping)
+    let categoryId = 1; // Default category
+    if (articleData.category) {
+      const categoryMap = {
+        'Cat': 1,
+        'General': 2,
+        'Inspiration': 3
+      };
+      categoryId = categoryMap[articleData.category] || 1;
+    }
+    
+    // Prepare article data for Supabase with correct column names
+    const postData = {
+      title: articleData.title,
+      description: articleData.introduction || '', // introduction -> description
+      content: articleData.content,
+      image: imageUrl, // thumbnail -> image
+      category_id: categoryId, // category -> category_id
+      date: articleData.date || new Date().toISOString(),
+      likes_count: 0
+    };
+    
+    console.log('Sending to Supabase:', postData);
+    
+    // Insert into Supabase
+    const { data, error } = await supabase
+      .from('posts')
+      .insert([postData])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Supabase error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      throw new Error(`Failed to create article: ${error.message}`);
+    }
+    
+    console.log('Article created successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error creating article:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing article
+ * @param {string|number} id - Article ID (with prefix like 'supabase_1')
+ * @param {Object} articleData - Updated article data
+ * @returns {Promise<Object>} Updated article
+ */
+export const updateArticle = async (id, articleData) => {
+  try {
+    console.log('Updating article:', id, articleData);
+    
+    // Parse ID to determine source
+    const idStr = String(id);
+    let realId = id;
+    let source = 'supabase';
+    
+    if (idStr.startsWith('supabase_')) {
+      realId = idStr.replace('supabase_', '');
+      source = 'supabase';
+    } else if (idStr.startsWith('external_')) {
+      realId = idStr.replace('external_', '');
+      source = 'external';
+    }
+    
+    if (source === 'external') {
+      throw new Error('Cannot update articles from external API');
+    }
+    
+    // Handle thumbnail image if new file is provided
+    let imageUrl = articleData.thumbnail || articleData.image;
+    
+    if (articleData.thumbnail && typeof articleData.thumbnail === 'object') {
+      try {
+        // Convert to base64 for storage in database
+        imageUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(articleData.thumbnail);
+        });
+      } catch (uploadErr) {
+        console.error('Image conversion failed, keeping existing:', uploadErr);
+        // Keep the file object, will be removed later
+      }
+    }
+    
+    // Prepare update data with correct column names
+    const updateData = {};
+    
+    if (articleData.title !== undefined) {
+      updateData.title = articleData.title;
+    }
+    if (articleData.content !== undefined) {
+      updateData.content = articleData.content;
+    }
+    if (imageUrl && typeof imageUrl === 'string') {
+      updateData.image = imageUrl; // thumbnail -> image
+    }
+    if (articleData.introduction !== undefined) {
+      updateData.description = articleData.introduction; // introduction -> description
+    }
+    if (articleData.category !== undefined) {
+      // Map category name to category_id
+      const categoryMap = {
+        'Cat': 1,
+        'General': 2,
+        'Inspiration': 3
+      };
+      updateData.category_id = categoryMap[articleData.category] || 1;
+    }
+    
+    console.log('Sending update to Supabase:', updateData);
+    
+    // Update in Supabase
+    const { data, error } = await supabase
+      .from('posts')
+      .update(updateData)
+      .eq('id', realId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Supabase error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      throw new Error(`Failed to update article: ${error.message}`);
+    }
+    
+    console.log('Article updated successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error updating article:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete an article
+ * @param {string|number} id - Article ID (with prefix like 'supabase_1' or 'external_1')
+ * @returns {Promise<boolean>} Success status
+ */
+export const deleteArticle = async (id) => {
+  try {
+    // Parse ID to determine source
+    const idStr = String(id);
+    let realId = id;
+    let source = 'supabase';
+    
+    if (idStr.startsWith('supabase_')) {
+      realId = idStr.replace('supabase_', '');
+      source = 'supabase';
+    } else if (idStr.startsWith('external_')) {
+      realId = idStr.replace('external_', '');
+      source = 'external';
+    }
+    
+    if (source === 'supabase') {
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', realId);
+      
+      if (error) {
+        throw new Error(`Failed to delete article: ${error.message}`);
+      }
+      
+      return true;
+    } else {
+      // Cannot delete from external API
+      throw new Error('Cannot delete articles from external API');
+    }
+  } catch (error) {
+    console.error('Error deleting article:', error.message);
+    throw error;
+  }
+};
+
+/**
+ * Get a single article by ID
+ * @param {string|number} id - Article ID
+ * @returns {Promise<Object>} Article data
+ */
+export const fetchArticleById = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/posts/${id}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch article: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching article:', error.message);
+    throw error;
   }
 };

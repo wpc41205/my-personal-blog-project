@@ -3,14 +3,19 @@ import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import DeleteConfirmModal from '@/components/admin/DeleteConfirmModal';
+import { fetchBlogPosts, fetchCategories, deleteArticle, updateArticle } from '../../services/api';
 
 const ArticleManagement = () => {
   const router = useRouter();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [categories, setCategories] = useState([]);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, articleId: null, articleTitle: '' });
 
   // Dummy data for demonstration - moved inside component to avoid dependency issue
   const getDummyArticles = () => [
@@ -31,12 +36,46 @@ const ArticleManagement = () => {
       return;
     }
 
-    // Simulate API call
-    setLoading(true);
-    setTimeout(() => {
-      setArticles(getDummyArticles());
-      setLoading(false);
-    }, 500);
+    // Fetch real data from API
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch articles and categories
+        const [articlesData, categoriesData] = await Promise.all([
+          fetchBlogPosts({ page: 1, limit: 50 }), // Fetch more articles for admin
+          fetchCategories()
+        ]);
+        
+        // Transform API data to match our table structure
+        const transformedArticles = articlesData.posts.map(post => ({
+          id: post.id,
+          title: post.title,
+          category: post.category,
+          status: post.status || 'Published', // Default to Published if not specified
+          date: post.date,
+          author: post.author
+        }));
+        
+        setArticles(transformedArticles);
+        setCategories(categoriesData);
+        
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load articles. Using fallback data.');
+        
+        // Fallback to dummy data if API fails
+        setArticles(getDummyArticles());
+        setCategories(['Cat', 'General', 'Inspiration']);
+        
+        toast.warning('Using fallback data. Check your connection.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [router]);
 
   const handleSearchChange = (e) => {
@@ -59,19 +98,43 @@ const ArticleManagement = () => {
   });
 
   const handleCreateArticle = () => {
-    toast.info('Navigate to create new article page');
-    // router.push('/admin/articles/create');
+    router.push('/admin/create-article');
   };
 
   const handleEditArticle = (id) => {
-    toast.info(`Edit article with ID: ${id}`);
-    // router.push(`/admin/articles/edit/${id}`);
+    router.push(`/admin/edit-article/${id}`);
   };
 
-  const handleDeleteArticle = (id) => {
-    if (window.confirm(`Are you sure you want to delete article ${id}?`)) {
-      toast.success(`Article ${id} deleted! (Simulated)`);
-      setArticles(prev => prev.filter(article => article.id !== id));
+  const handleDeleteArticle = (id, title) => {
+    setDeleteModal({ isOpen: true, articleId: id, articleTitle: title });
+  };
+
+  const confirmDelete = async () => {
+    const { articleId } = deleteModal;
+    try {
+      await deleteArticle(articleId);
+      toast.success('Article deleted successfully!');
+      setArticles(prev => prev.filter(article => article.id !== articleId));
+    } catch (error) {
+      console.error('Error deleting article:', error);
+      toast.error('Failed to delete article. Please try again.');
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const article = articles.find(a => a.id === id);
+      if (!article) return;
+
+      await updateArticle(id, { ...article, status: newStatus });
+      toast.success(`Article status updated to ${newStatus}`);
+      
+      setArticles(prev => prev.map(article => 
+        article.id === id ? { ...article, status: newStatus } : article
+      ));
+    } catch (error) {
+      console.error('Error updating article status:', error);
+      toast.error('Failed to update article status. Please try again.');
     }
   };
 
@@ -136,9 +199,9 @@ const ArticleManagement = () => {
             className="w-[200px] h-[48px] rounded-lg pt-3 pr-12 pb-3 pl-3 gap-1 border border-[#DAD6D1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B7355] appearance-none bg-no-repeat bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzY2NjY2NiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+')] bg-[length:12px] bg-[center_right_20px]"
           >
             <option value="All">Category</option>
-            <option value="Cat">Cat</option>
-            <option value="General">General</option>
-            <option value="Inspiration">Inspiration</option>
+            {categories.map((category, index) => (
+              <option key={index} value={category}>{category}</option>
+            ))}
           </select>
         </div>
 
@@ -164,7 +227,16 @@ const ArticleManagement = () => {
               {loading ? (
                 <tr className="bg-white">
                   <td colSpan="4" className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                    Loading articles...
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#26231E] mr-2"></div>
+                      Loading articles...
+                    </div>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr className="bg-white">
+                  <td colSpan="4" className="px-6 py-4 whitespace-nowrap text-center text-sm text-red-500">
+                    {error}
                   </td>
                 </tr>
               ) : filteredArticles.length === 0 ? (
@@ -198,7 +270,7 @@ const ArticleManagement = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
-                      <button onClick={() => handleDeleteArticle(article.id)} className="text-[#26231E] hover:text-red-600">
+                      <button onClick={() => handleDeleteArticle(article.id, article.title)} className="text-[#26231E] hover:text-red-600">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -212,6 +284,15 @@ const ArticleManagement = () => {
         </div>
         </main>
       </SidebarInset>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, articleId: null, articleTitle: '' })}
+        onConfirm={confirmDelete}
+        title="Delete article"
+        message="Do you want to delete this article?"
+      />
     </SidebarProvider>
   );
 };
