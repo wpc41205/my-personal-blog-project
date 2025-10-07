@@ -3,64 +3,37 @@ import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { supabase } from '@/lib/supabase';
 
 const AdminNotifications = () => {
   const router = useRouter();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [avatarUrl, setAvatarUrl] = useState('/me.jpg');
 
-  // Dummy data for demonstration
-  const getDummyNotifications = () => [
+  // Minimal dummy data matching the provided UI
+  const getDemoData = (avatar) => [
     {
       id: 1,
-      type: 'new_article',
-      title: 'New Article Published',
-      message: 'A new article "Understanding Cat Behavior" has been published.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      read: false,
-      priority: 'high'
+      avatar: avatar,
+      name: 'Jacob Lash',
+      text: 'Commented on your article: The Fascinating World of Cats: Why We Love Our Furry Friends',
+      detail: '“I loved this article! It really explains why my cat is so independent yet loving. The purring section was super interesting.”',
+      timeAgo: '4 hours ago',
+      href: '#'
     },
     {
       id: 2,
-      type: 'user_registration',
-      title: 'New User Registration',
-      message: 'john.doe@example.com has registered for an account.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-      read: false,
-      priority: 'medium'
-    },
-    {
-      id: 3,
-      type: 'system',
-      title: 'System Update Available',
-      message: 'A new system update is available for installation.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-      read: true,
-      priority: 'low'
-    },
-    {
-      id: 4,
-      type: 'comment',
-      title: 'New Comment on Article',
-      message: 'Someone commented on "The Science of Cat Purring".',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-      read: true,
-      priority: 'medium'
-    },
-    {
-      id: 5,
-      type: 'backup',
-      title: 'Backup Completed',
-      message: 'Daily backup has been completed successfully.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-      read: true,
-      priority: 'low'
+      avatar: avatar,
+      name: 'Jacob Lash',
+      text: 'liked your article: The Fascinating World of Cats: Why We Love Our Furry Friends',
+      detail: '',
+      timeAgo: '4 hours ago',
+      href: '#'
     }
   ];
 
   useEffect(() => {
-    // Check if admin is logged in
     const adminToken = localStorage.getItem('adminToken');
     if (!adminToken) {
       toast.error('Access denied. Please login first.');
@@ -68,68 +41,116 @@ const AdminNotifications = () => {
       return;
     }
 
-    // Simulate API call
-    setLoading(true);
-    setTimeout(() => {
-      setNotifications(getDummyNotifications());
-      setLoading(false);
-    }, 500);
-  }, [router]);
+    // pull avatar from localStorage if available
+    try {
+      const adminUserData = localStorage.getItem('adminUser');
+      if (adminUserData) {
+        const parsed = JSON.parse(adminUserData);
+        if (parsed?.avatar_url) {
+          setAvatarUrl(parsed.avatar_url);
+        }
+      }
+    } catch {}
 
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value);
-  };
+    const formatTimeAgo = (date) => {
+      const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+      const hours = Math.floor(diff / 3600);
+      const days = Math.floor(diff / 86400);
+      if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))} mins ago`;
+      if (hours < 24) return `${hours} hours ago`;
+      return `${days} days ago`;
+    };
 
-  const handleMarkAsRead = (id) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-    toast.success('Notification marked as read');
-  };
+    const load = async () => {
+      try {
+        setLoading(true);
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
-    toast.success('All notifications marked as read');
-  };
+        // Fetch recent comments
+        const { data: comments, error: commentsError } = await supabase
+          .from('comments')
+          .select('id, post_id, user_id, content, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-  const handleDeleteNotification = (id) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-    toast.success('Notification deleted');
-  };
+        if (commentsError) throw commentsError;
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+        const commentUserIds = [...new Set((comments || []).map(c => c.user_id))];
+        const commentPostIds = [...new Set((comments || []).map(c => c.post_id))];
 
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'new_article': return '📄';
-      case 'user_registration': return '👤';
-      case 'system': return '⚙️';
-      case 'comment': return '💬';
-      case 'backup': return '💾';
-      default: return '🔔';
-    }
-  };
+        const [{ data: users }, { data: posts }] = await Promise.all([
+          supabase.from('users').select('id, name, avatar_url').in('id', commentUserIds),
+          supabase.from('posts').select('id, title').in('id', commentPostIds)
+        ]);
 
-  const filteredNotifications = notifications.filter(notification => {
-    if (filter === 'all') return true;
-    if (filter === 'unread') return !notification.read;
-    return notification.type === filter;
-  });
+        const userMap = new Map((users || []).map(u => [u.id, u]));
+        const postMap = new Map((posts || []).map(p => [p.id, p]));
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+        const commentNotifications = (comments || []).map(c => {
+          const u = userMap.get(c.user_id) || {};
+          const p = postMap.get(c.post_id) || {};
+          return {
+            id: `comment_${c.id}`,
+            avatar: u.avatar_url || avatarUrl,
+            name: u.name || 'Someone',
+            text: `Commented on your article: ${p.title || 'Untitled'}`,
+            detail: c.content || '',
+            timeAgo: formatTimeAgo(c.created_at),
+            href: `/admin/article-management`
+          };
+        });
+
+        // Fetch recent likes
+        const { data: likes, error: likesError } = await supabase
+          .from('post_likes')
+          .select('id, post_id, user_id, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (likesError) throw likesError;
+
+        const likeUserIds = [...new Set((likes || []).map(l => l.user_id))];
+        const likePostIds = [...new Set((likes || []).map(l => l.post_id))];
+
+        const [{ data: likeUsers }, { data: likePosts }] = await Promise.all([
+          supabase.from('users').select('id, name, avatar_url').in('id', likeUserIds),
+          supabase.from('posts').select('id, title').in('id', likePostIds)
+        ]);
+
+        const likeUserMap = new Map((likeUsers || []).map(u => [u.id, u]));
+        const likePostMap = new Map((likePosts || []).map(p => [p.id, p]));
+
+        const likeNotifications = (likes || []).map(l => {
+          const u = likeUserMap.get(l.user_id) || {};
+          const p = likePostMap.get(l.post_id) || {};
+          return {
+            id: `like_${l.id}`,
+            avatar: u.avatar_url || avatarUrl,
+            name: u.name || 'Someone',
+            text: `liked your article: ${p.title || 'Untitled'}`,
+            detail: '',
+            timeAgo: formatTimeAgo(l.created_at),
+            href: `/admin/article-management`
+          };
+        });
+
+        const combined = [...commentNotifications, ...likeNotifications]
+          .sort((a, b) => (a.timeAgo > b.timeAgo ? -1 : 1));
+
+        if (combined.length === 0) {
+          setNotifications(getDemoData(avatarUrl));
+        } else {
+          setNotifications(combined);
+        }
+      } catch (err) {
+        console.warn('Falling back to demo notifications:', err);
+        setNotifications(getDemoData(avatarUrl));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [router, avatarUrl]);
 
   if (loading) {
     return (
@@ -143,109 +164,34 @@ const AdminNotifications = () => {
     <SidebarProvider>
       <AdminSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <div className="ml-auto flex items-center gap-4">
-            {unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                {unreadCount} unread
-              </span>
-            )}
-            <h2 className="text-2xl font-bold text-[#26231E]">Notifications</h2>
+        <header className="w-full h-[96px] opacity-100 left-[280px] pt-6 pr-[60px] pb-6 pl-[60px] gap-10 border-b border-[#DAD6D1] flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <SidebarTrigger className="-ml-1" />
+            <h2 className="text-2xl font-bold text-[#26231E]">Notification</h2>
           </div>
         </header>
-        
-        <main className="flex-1 p-8">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-4">
-              <select
-                value={filter}
-                onChange={handleFilterChange}
-                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B7355]"
-              >
-                <option value="all">All Notifications</option>
-                <option value="unread">Unread Only</option>
-                <option value="new_article">New Articles</option>
-                <option value="user_registration">User Registration</option>
-                <option value="system">System</option>
-                <option value="comment">Comments</option>
-                <option value="backup">Backup</option>
-              </select>
-            </div>
 
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Mark All as Read
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            {filteredNotifications.length === 0 ? (
-              <div className="bg-white rounded-lg shadow p-8 text-center">
-                <div className="text-gray-400 text-6xl mb-4">🔔</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications found</h3>
-                <p className="text-gray-500">You're all caught up!</p>
-              </div>
-            ) : (
-              filteredNotifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`bg-white rounded-lg shadow p-6 border-l-4 ${
-                    notification.read 
-                      ? 'border-gray-200' 
-                      : notification.priority === 'high' 
-                        ? 'border-red-500' 
-                        : 'border-blue-500'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4">
-                      <div className="text-2xl">{getTypeIcon(notification.type)}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h3 className={`font-medium ${notification.read ? 'text-gray-600' : 'text-gray-900'}`}>
-                            {notification.title}
-                          </h3>
-                          <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(notification.priority)}`}>
-                            {notification.priority}
-                          </span>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          )}
-                        </div>
-                        <p className="text-gray-600 mb-2">{notification.message}</p>
-                        <p className="text-sm text-gray-400">
-                          {notification.timestamp.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      {!notification.read && (
-                        <button
-                          onClick={() => handleMarkAsRead(notification.id)}
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Mark as Read
-                        </button>
+        <main className="flex-1 px-12 py-8">
+          <div className="rounded-lg">
+            {notifications.map((n, idx) => (
+              <div key={n.id} className={`px-6 py-5 ${idx !== 0 ? 'border-t border-[#EFEDE9]' : ''}`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <img src={n.avatar} alt={n.name} className="w-10 h-10 rounded-full object-cover" />
+                    <div>
+                      <p className="text-[#26231E] font-medium text-sm">
+                        <span className="text-[#26231E] font-semibold">{n.name}</span> {n.text}
+                      </p>
+                      {n.detail && (
+                        <p className="text-[#75716B] text-sm mt-2 max-w-4xl">{n.detail}</p>
                       )}
-                      <button
-                        onClick={() => handleDeleteNotification(notification.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <p className="text-xs text-[#75716B] mt-2">{n.timeAgo}</p>
                     </div>
                   </div>
+                  <a href={n.href} className="text-[#26231E] text-sm hover:text-[#8B7355]">View</a>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
         </main>
       </SidebarInset>
