@@ -259,8 +259,16 @@ const ArticleManagement = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center text-green-600 font-['Poppins'] font-medium text-base leading-6">
-                        <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                      <span className={`inline-flex items-center font-['Poppins'] font-medium text-base leading-6 ${
+                        article.status === 'Draft' 
+                          ? 'text-[#75716B]' 
+                          : 'text-green-600'
+                      }`}>
+                        <span className={`w-2 h-2 rounded-full mr-2 ${
+                          article.status === 'Draft' 
+                            ? 'bg-[#75716B]' 
+                            : 'bg-green-500'
+                        }`}></span>
                         {article.status}
                       </span>
                     </td>

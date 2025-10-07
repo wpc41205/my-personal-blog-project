@@ -60,7 +60,7 @@ export const fetchBlogPosts = async (options = {}) => {
           date: post.date,
           likes: post.likes_count || 0,
           author: 'Pataveekorn C.',
-          status: 'Published',
+          status: post.status_id === 2 ? 'Draft' : 'Published', // Map status_id back to text
           source: 'supabase'
         }));
       })(),
@@ -982,6 +982,12 @@ export const createArticle = async (articleData) => {
       categoryId = categoryMap[articleData.category] || 1;
     }
     
+    // Map status to status_id
+    let statusId = 1; // Default: Published
+    if (articleData.status === 'Draft') {
+      statusId = 2;
+    }
+    
     // Prepare article data for Supabase with correct column names
     const postData = {
       title: articleData.title,
@@ -989,6 +995,7 @@ export const createArticle = async (articleData) => {
       content: articleData.content,
       image: imageUrl, // thumbnail -> image
       category_id: categoryId, // category -> category_id
+      status_id: statusId, // 1 = Published, 2 = Draft
       date: articleData.date || new Date().toISOString(),
       likes_count: 0
     };
@@ -1084,6 +1091,10 @@ export const updateArticle = async (id, articleData) => {
         'Inspiration': 3
       };
       updateData.category_id = categoryMap[articleData.category] || 1;
+    }
+    if (articleData.status !== undefined) {
+      // Map status to status_id
+      updateData.status_id = articleData.status === 'Draft' ? 2 : 1;
     }
     
     console.log('Sending update to Supabase:', updateData);
