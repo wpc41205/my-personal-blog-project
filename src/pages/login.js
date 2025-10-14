@@ -69,17 +69,17 @@ const Login = () => {
       <Navigation />
       
       <main className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="w-[798px] h-[540px] bg-[#EFEEEB] rounded-[16px] px-[120px] py-[60px] border border-[#DAD6D1] opacity-100 flex flex-col gap-[40px]">
+        <div className="w-full max-w-[798px] min-h-[540px] bg-[#EFEEEB] rounded-[16px] px-6 sm:px-10 md:px-20 lg:px-[120px] py-8 md:py-10 lg:py-[60px] border border-[#DAD6D1] opacity-100 flex flex-col gap-6 md:gap-8 lg:gap-[40px]">
           <h1 className="text-center font-poppins font-semibold text-[40px] leading-[48px] tracking-[0] text-[#26231E]">Log in</h1>
 
           {error && (
-            <div className="fixed z-50 w-[700px] h-[86px] bottom-4 right-4">
+            <div className="w-full mb-2">
               <AlertBanner
                 variant="error"
                 title="Your password is incorrect or this email doesn't exist"
                 description="Please try another password or email"
                 onClose={() => setError('')}
-                className="shadow-lg rounded-[8px] px-4 py-4"
+                className="shadow-lg rounded-[8px] px-4 py-4 w-full"
               />
             </div>
           )}
@@ -105,7 +105,7 @@ const Login = () => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-[558px] h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.password ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
+                className={`w/[558px] h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.password ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
                 autoComplete="current-password"
               />
               {/* Inline error text removed as requested */}
@@ -120,9 +120,8 @@ const Login = () => {
                 {isSubmitting ? 'Logging in...' : 'Log in'}
               </button>
             </div>
-          </form>
 
-          <p className="text-center text-sm mt-2 text-[#75716B]">
+            <p className="text-center text-sm  text-[#75716B] mt-4">
             Don&apos;t have an account?{' '}
             <button 
               onClick={() => router.push('/register')} 
@@ -131,6 +130,15 @@ const Login = () => {
               Sign up
             </button>
           </p>
+
+            <div className="text-center mt-4">
+              <p className="text-sm text-[#75716B] mb-2 font-poppins font-medium">Demo Credentials:</p>
+              <p className="text-xs text-[#75716B]">Email: users_test@gmail.com</p>
+              <p className="text-xs text-[#75716B]">Password: users@123</p>
+            </div>
+          </form>
+
+
         </div>
       </main>
     </div>

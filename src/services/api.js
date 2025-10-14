@@ -445,18 +445,21 @@ export const registerUser = async (userData) => {
       return { user: null, auth: authData, message: 'Confirmation email sent. Please verify your email to complete registration.' };
     }
 
-    // Create user profile in users table
-    console.log('Creating user profile...');
+    // Create or update user profile in users table
+    // Many Supabase setups have an auth trigger that inserts (id, email) into public.users on signup.
+    // Use upsert to avoid duplicate key errors and just enrich the existing row.
+    console.log('Creating/updating user profile...');
     const { data: profileData, error: userError } = await supabase
       .from('users')
-      .insert([
+      .upsert([
         {
           id: authData.user.id,
+          email: userData.email || userData?.email_address || authData.user.email || null,
           username: userData.username,
           name: userData.name,
           role: 'user'
         }
-      ])
+      ], { onConflict: 'id', ignoreDuplicates: false })
       .select()
       .single();
 
