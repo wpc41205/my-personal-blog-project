@@ -430,8 +430,19 @@ export const registerUser = async (userData) => {
     console.log('Auth response:', { authData, authError });
 
     if (authError) {
-      console.error('Auth error:', authError);
-      throw new Error(authError.message);
+      console.warn('Auth error (handled):', authError);
+      const message = (authError.message || '').toLowerCase();
+      // Normalize common Supabase error to a user-friendly message
+      if (message.includes('already registered') || message.includes('already exists')) {
+        return { error: 'Email is already taken, Please try another email.' };
+      }
+      return { error: authError.message };
+    }
+
+    // If email confirmation is enabled, authData.user can be null.
+    // In that case, skip profile creation and return early with a success message.
+    if (!authData?.user?.id) {
+      return { user: null, auth: authData, message: 'Confirmation email sent. Please verify your email to complete registration.' };
     }
 
     // Create user profile in users table
@@ -452,15 +463,15 @@ export const registerUser = async (userData) => {
     console.log('Profile creation response:', { profileData, userError });
 
     if (userError) {
-      console.error('Profile creation error:', userError);
-      throw new Error(userError.message);
+      console.warn('Profile creation error (handled):', userError);
+      return { error: userError.message };
     }
 
     console.log('Registration successful!');
     return { user: profileData, auth: authData };
   } catch (error) {
     console.error('Error registering user:', error.message);
-    throw error;
+    return { error: error.message };
   }
 };
 

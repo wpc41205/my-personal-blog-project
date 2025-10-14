@@ -19,6 +19,11 @@ const Register = () => {
   });
   const router = useRouter();
 
+  const isValidEmail = (value) => {
+    // Basic email validation
+    return /.+@.+\..+/.test(String(value).toLowerCase());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -28,7 +33,7 @@ const Register = () => {
     const nextFieldErrors = { name: '', username: '', email: '', password: '' };
     if (!name) nextFieldErrors.name = 'Please enter your name';
     if (!username) nextFieldErrors.username = 'Please enter a username';
-    if (!email) nextFieldErrors.email = 'Please enter a valid email';
+    if (!email || !isValidEmail(email)) nextFieldErrors.email = 'Please enter a valid email address';
     if (!password) nextFieldErrors.password = 'Please enter a password';
 
     const hasClientErrors = Object.values(nextFieldErrors).some(Boolean);
@@ -40,7 +45,25 @@ const Register = () => {
 
     try {
       setIsSubmitting(true);
-      await registerUser({ name, username, email, password });
+      const result = await registerUser({ name, username, email, password });
+
+      // Handle normalized errors from API
+      if (result?.error) {
+        const message = String(result.error).toLowerCase();
+        if (message.includes('email')) {
+          setFieldErrors((prev) => ({ ...prev, email: 'Email is already taken, Please try another email.' }));
+        } else {
+          setError(result.error || 'Sign up failed. Please try again.');
+        }
+        return;
+      }
+
+      // If email confirmation is enabled, show info instead of crashing
+      if (!result?.user && result?.message) {
+        setError(result.message);
+        return;
+      }
+
       router.push('/registration-success');
     } catch (err) {
       const message = (err?.response?.data?.message || err?.message || '').toLowerCase();
@@ -105,7 +128,7 @@ const Register = () => {
             <div>
               <label className="block mb-2 font-poppins font-medium text-[16px] leading-[24px] tracking-[0] text-[#75716B]">Email</label>
               <Input
-                type="email"
+                type="text"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
