@@ -26,7 +26,14 @@ const HeroSection = () => {
         {/* Center Section - Image */}
         <div className="flex-1 flex justify-center items-center md:px-4 mb-8 md:mb-0 max-w-md">
           <div className="w-[386px] h-[529px] rounded-2xl border-2 border-gray-300 overflow-hidden">
-                <Image src="/me.jpg" alt="Profile" width={386} height={529} className="w-full h-full object-cover" />
+                <Image 
+                  src="/me.jpg" 
+                  alt="Profile" 
+                  width={386} 
+                  height={529} 
+                  priority
+                  className="w-full h-full object-cover" 
+                />
           </div>
         </div>
 

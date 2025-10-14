@@ -18,6 +18,7 @@ const ArticleCard = ({ article }) => {
               alt={article.title}
               width={400}
               height={360}
+              style={{ width: 'auto', height: 'auto' }}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
