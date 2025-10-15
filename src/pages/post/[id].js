@@ -148,9 +148,9 @@ const ViewPost = () => {
       
       // Add the new comment to the list
       setComments(prevComments => [newComment, ...prevComments]);
-      setCommentText('');
-      
       toast.success('Comment added successfully!');
+      
+      setCommentText('');
     } catch (error) {
       console.error('Error adding comment:', error);
       toast.error('Failed to add comment');
@@ -323,6 +323,7 @@ const ViewPost = () => {
             {/* Comments Section */}
             <div className="mt-8">
               <h3 className="font-medium text-[#75716B] mb-6 text-base leading-6 tracking-normal font-['Poppins']">Comment</h3>
+              
               
               {/* Comment Input */}
               <div>

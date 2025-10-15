@@ -99,7 +99,7 @@ const AdminLogin = () => {
                 disabled={isSubmitting}
                 className="w-[141px] h-[48px] rounded-[999px] bg-[#26231E] px-[40px] py-[12px] font-poppins font-medium text-base leading-6 text-white hover:bg-[#3A342E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Logging in...' : 'Log in'}
+                {isSubmitting ? 'Log in...' : 'Log in'}
               </button>
             </div>
 

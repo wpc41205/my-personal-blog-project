@@ -161,7 +161,7 @@ const Register = () => {
                 type="submit"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Signing up...' : 'Sign up'}
+                {isSubmitting ? 'Sign up...' : 'Sign up'}
               </button>
             </div>
           </form>

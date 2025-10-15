@@ -117,7 +117,7 @@ const Login = () => {
                 type="submit"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Logging in...' : 'Log in'}
+                {isSubmitting ? 'Log in...' : 'Log in'}
               </button>
             </div>
 
