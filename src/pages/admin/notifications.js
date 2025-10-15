@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { supabase } from '@/lib/supabase';
@@ -177,7 +178,7 @@ const AdminNotifications = () => {
               <div key={n.id} className={`px-6 py-5 ${idx !== 0 ? 'border-t border-[#EFEDE9]' : ''}`}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
-                    <img src={n.avatar} alt={n.name} className="w-10 h-10 rounded-full object-cover" />
+                    <Image src={n.avatar} alt={n.name} width={40} height={40} className="w-10 h-10 rounded-full object-cover" />
                     <div>
                       <p className="text-[#26231E] font-medium text-sm">
                         <span className="text-[#26231E] font-semibold">{n.name}</span> {n.text}

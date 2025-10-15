@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { fetchCategories, createArticle } from '../../services/api';
@@ -187,9 +188,11 @@ const CreateArticle = () => {
                   className="relative w-[460px] h-[260px] flex items-center justify-center bg-[#EFEEEB] rounded-lg border border-dashed border-[#DAD6D1] opacity-100 pt-3 pr-4 pb-3 pl-4 gap-[10px]"
                 >
                   {formData.thumbnail ? (
-                    <img
+                    <Image
                       src={URL.createObjectURL(formData.thumbnail)}
                       alt="Thumbnail preview"
+                      width={460}
+                      height={260}
                       className="max-w-full max-h-full object-contain rounded-lg"
                     />
                   ) : (
