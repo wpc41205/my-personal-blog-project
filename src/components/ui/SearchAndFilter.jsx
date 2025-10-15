@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
-import Button from './Button';
-import Input from './Input';
+import { Button } from './button';
+import { Input } from './input';
 import Select from './Select';
 import { SearchIcon } from './Icons';
 import { DEFAULT_FILTER_OPTIONS } from '../../constants';

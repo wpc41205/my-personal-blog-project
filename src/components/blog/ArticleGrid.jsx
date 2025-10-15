@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import SearchAndFilter from '../ui/SearchAndFilter';
 import ArticleCard from './ArticleCard';
-import Button from '../ui/Button';
+import { Button } from '../ui/button';
 import { fetchBlogPosts, fetchBlogPostsByCategory, searchBlogPosts, fetchCategories } from '../../services/api';
 import { DEFAULT_FILTER_OPTIONS, formatDate } from '../../constants';
 

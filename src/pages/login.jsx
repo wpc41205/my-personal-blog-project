@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Navigation from '../components/layout/Navigation';
 import AlertBanner from '../components/ui/AlertBanner';
-import Input from '../components/ui/Input';
+import { Input } from '../components/ui/input';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
@@ -73,13 +73,13 @@ const Login = () => {
           <h1 className="text-center font-poppins font-semibold text-[40px] leading-[48px] tracking-[0] text-[#26231E]">Log in</h1>
 
           {error && (
-            <div className="w-full mb-2">
+            <div className="fixed bottom-4 right-4 z-50 w-[700px] h-[86px]">
               <AlertBanner
                 variant="error"
                 title="Your password is incorrect or this email doesn't exist"
                 description="Please try another password or email"
                 onClose={() => setError('')}
-                className="shadow-lg rounded-[8px] px-4 py-4 w-full"
+                className="shadow-lg rounded-[8px] px-4 py-4 w-full h-full"
               />
             </div>
           )}
@@ -92,7 +92,7 @@ const Login = () => {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-[558px] h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.email ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
+                className={`w-full h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.email ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
                 autoComplete="email"
               />
               {/* Inline error text removed as requested */}
@@ -105,7 +105,7 @@ const Login = () => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w/[558px] h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.password ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
+                className={`w-full h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.password ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
                 autoComplete="current-password"
               />
               {/* Inline error text removed as requested */}

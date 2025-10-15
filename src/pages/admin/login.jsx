@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import Input from '../../components/ui/Input';
+import { Input } from '../../components/ui/input';
 
 const AdminLogin = () => {
   const router = useRouter();
