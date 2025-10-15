@@ -17,6 +17,7 @@ const ResetPassword = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -136,6 +137,15 @@ const ResetPassword = () => {
       return;
     }
 
+    // Show confirmation dialog instead of directly resetting password
+    setShowConfirmDialog(true);
+    setIsSubmitting(false);
+  };
+
+  const confirmResetPassword = async () => {
+    setShowConfirmDialog(false);
+    setIsSubmitting(true);
+
     try {
       // Show loading message
       const loadingToast = toast.loading('Verifying current password...');
@@ -220,6 +230,10 @@ const ResetPassword = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const cancelResetPassword = () => {
+    setShowConfirmDialog(false);
   };
 
   if (loading) {
@@ -414,6 +428,45 @@ const ResetPassword = () => {
       </main>
 
       <Footer />
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#F9F8F6] rounded-2xl shadow-xl mx-4 w-[477px] h-[256px] pt-4 pr-6 pb-10 pl-6 gap-6 flex flex-col items-center justify-center">
+            {/* Close button */}
+            <button
+              onClick={cancelResetPassword}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors "
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Dialog content */}
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-[#26231E] mb-4">Reset password</h3>
+              <p className="text-[#75716B] mb-8">Do you want to reset your password?</p>
+              
+              {/* Action buttons */}
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={cancelResetPassword}
+                  className="px-6 py-3 border border-[#26231E] text-[#26231E]  hover:bg-gray-50 transition-colors font-medium rounded-[999px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmResetPassword}
+                  className="px-6 py-3 bg-[#26231E] text-white hover:bg-[#3A342E] transition-colors font-medium rounded-[999px]"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -14,7 +14,7 @@ const Input = ({
   icon,
   ...props
 }) => {
-  const baseClasses = 'w-full px-4 py-3 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-colors duration-200';
+  const baseClasses = 'w-full px-4 py-3 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-colors duration-200 invalid:border-red-500 invalid:focus:ring-red-300';
   const classes = `${baseClasses} ${className}`;
   
   return (

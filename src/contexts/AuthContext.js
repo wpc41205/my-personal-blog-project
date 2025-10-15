@@ -71,6 +71,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
+      // Validate credentials
+      if (!credentials.email || !credentials.password) {
+        return { error: 'Email and password are required' };
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
@@ -88,7 +93,11 @@ export const AuthProvider = ({ children }) => {
           errorMessage = 'Too many login attempts. Please wait a moment';
         }
         
-        throw new Error(errorMessage);
+        return { error: errorMessage };
+      }
+
+      if (!authData.user) {
+        return { error: 'Login failed. Please try again.' };
       }
 
       // Get user profile from users table
@@ -99,14 +108,17 @@ export const AuthProvider = ({ children }) => {
         .single();
 
       if (userError) {
-        throw new Error(userError.message);
+        console.error('Error getting user profile:', userError);
+        // If user doesn't exist in users table, still set the auth user
+        setUser(authData.user);
+        return { user: authData.user, auth: authData };
       }
 
       setUser(userData);
       return { user: userData, auth: authData };
     } catch (error) {
       console.error('Error logging in user:', error);
-      throw error;
+      return { error: error.message || 'An unexpected error occurred. Please try again.' };
     }
   };
 

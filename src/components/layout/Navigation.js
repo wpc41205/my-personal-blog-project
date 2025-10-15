@@ -66,6 +66,14 @@ export default function Navigation() {
               <span className="text-2xl font-bold text-[#26231E]">Wave Mashare</span>
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             </Link>
+            {/* Admin button next to logo (desktop) */}
+            {!user && (
+              <Link href="/admin/login" className="hidden md:block ml-4">
+                <button className="h-[40px] rounded-[999px] border border-[#DAD6D1] bg-white px-[16px] py-[8px] font-poppins font-medium text-sm leading-6 text-[#26231E] hover:bg-gray-50 transition-colors">
+                  Admin
+                </button>
+              </Link>
+            )}
           </div>
 
           {/* Auth Buttons or User Menu */}
@@ -286,6 +294,14 @@ export default function Navigation() {
                   </>
                 ) : (
                   <>
+                    <Link href="/admin/login" className="w-full">
+                      <button 
+                        className="w-full max-w-[327px] h-[48px] rounded-[999px] border border-[#DAD6D1] bg-white px-[40px] py-[12px] font-poppins font-medium text-base leading-6 text-[#26231E] hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Admin
+                      </button>
+                    </Link>
                     <Link href="/login" className="w-full">
                       <button 
                         className="w-full max-w-[327px] h-[48px] rounded-[999px] border border-[#DAD6D1] bg-white px-[40px] py-[12px] font-poppins font-medium text-base leading-6 text-[#26231E] hover:bg-gray-50 transition-colors"
