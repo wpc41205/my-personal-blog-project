@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import Navigation from '../../components/layout/Navigation';
 import Footer from '../../components/layout/Footer';
-import Button from '../../components/ui/Button';
+import { Button } from '../../components/ui/button';
 import { LoadingState, ErrorState } from '../../components/ui/LoadingStates';
 import { LikeIcon, CopyLinkIcon, FacebookIcon, LinkedInIcon, TwitterIcon } from '../../components/ui/Icons';
 import { getBlogPost, toggleLike, getLikeCount, checkUserLike, addComment, getComments } from '../../services/api';
@@ -270,11 +270,11 @@ const ViewPost = () => {
 
             {/* Engagement Section */}
             <div className="pt-8">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 bg-[#EFEEEB] rounded-2xl opacity-100 h-auto sm:h-20 pt-4 pr-6 pb-4 pl-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8 bg-[#EFEEEB] rounded-2xl opacity-100 h-auto sm:h-20 p-4 sm:pt-4 sm:pr-6 sm:pb-4 sm:pl-6">
                 {/* Like Counter */}
                 <button 
                   onClick={handleLikeClick}
-                  className={`flex items-center justify-center gap-1.5 bg-white rounded-full border border-[#DAD6D1] opacity-100 w-[135px] h-12 pt-3 pr-10 pb-3 pl-10 hover:bg-[#EFEEEB] transition-colors cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 bg-white rounded-full border border-[#DAD6D1] opacity-100 w-full sm:w-[135px] h-10 sm:h-12 px-4 sm:pt-3 sm:pr-10 sm:pb-3 sm:pl-10 hover:bg-[#EFEEEB] transition-colors cursor-pointer ${
                     userLiked ? 'bg-red-50 border-red-200' : ''
                   }`}
                 >
@@ -285,33 +285,33 @@ const ViewPost = () => {
                 </button>
                 
                 {/* Right Side - Copy Link Button and Social Media Icons */}
-                <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-end">
+                <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-center sm:justify-end">
                   {/* Copy Link Button */}
                   <button 
                     onClick={handleCopyLink}
-                    className="flex items-center justify-center gap-2 bg-white rounded-full border border-[#DAD6D1] text-[#26231E] hover:bg-[#EFEEEB] transition-colors opacity-100 w-full sm:w-[185px] h-12 pt-3 pr-8 pb-3 pl-8"
+                    className="flex items-center justify-center gap-1.5 bg-white rounded-full border border-[#DAD6D1] text-[#26231E] hover:bg-[#EFEEEB] transition-colors opacity-100 flex-1 sm:w-[185px] h-10 sm:h-12 px-3 sm:pt-3 sm:pr-8 sm:pb-3 sm:pl-8"
                   >
-                    <CopyLinkIcon className="w-4 h-4" />
+                    <CopyLinkIcon className="w-4 h-4 flex-shrink-0" />
                     <span className="text-sm">Copy link</span>
                   </button>
                   
                   {/* Social Media Icons */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <button 
                       onClick={() => handleSocialShare('facebook')}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-colors opacity-100"
+                      className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-colors opacity-100"
                     >
                       <FacebookIcon className="w-6 h-6" />
                     </button>
                     <button 
                       onClick={() => handleSocialShare('linkedin')}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-700 flex items-center justify-center text-white hover:bg-blue-800 transition-colors opacity-100"
+                      className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-blue-700 flex items-center justify-center text-white hover:bg-blue-800 transition-colors opacity-100"
                     >
                       <LinkedInIcon className="w-6 h-6" />
                     </button>
                     <button 
                       onClick={() => handleSocialShare('twitter')}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-400 flex items-center justify-center text-white hover:bg-blue-500 transition-colors opacity-100"
+                      className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-blue-400 flex items-center justify-center text-white hover:bg-blue-500 transition-colors opacity-100"
                     >
                       <TwitterIcon className="w-6 h-6" />
                     </button>

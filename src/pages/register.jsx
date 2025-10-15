@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Navigation from '../components/layout/Navigation';
-import Input from '../components/ui/Input';
+import { Input } from '../components/ui/input';
 import { registerUser } from '../services/api';
 
 const Register = () => {
@@ -89,7 +89,7 @@ const Register = () => {
       <Navigation />
 
       <main className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="w-[798px] h-[748px] bg-[#EFEEEB] rounded-[16px] px-[120px] py-[60px] border border-[#DAD6D1] opacity-100 flex flex-col gap-[24px]">
+        <div className="w-full max-w-[798px] min-h-[748px] bg-[#EFEEEB] rounded-[16px] px-6 sm:px-10 md:px-20 lg:px-[120px] py-8 md:py-10 lg:py-[60px] border border-[#DAD6D1] opacity-100 flex flex-col gap-6 md:gap-8 lg:gap-[24px]">
           <h1 className="text-center font-poppins font-semibold text-[40px] leading-[48px] tracking-[0] text-[#26231E]">Sign up</h1>
 
           {/* Top alert removed as requested */}
@@ -102,7 +102,7 @@ const Register = () => {
                 placeholder="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-[558px] h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.name ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
+                className={`w-full h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.name ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
                 autoComplete="name"
               />
               {fieldErrors.name && (
@@ -117,7 +117,7 @@ const Register = () => {
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className={`w-[558px] h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.username ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
+                className={`w-full h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.username ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
                 autoComplete="username"
               />
               {fieldErrors.username && (
@@ -132,7 +132,7 @@ const Register = () => {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-[558px] h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.email ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
+                className={`w-full h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.email ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
                 autoComplete="email"
               />
               {fieldErrors.email && (
@@ -147,7 +147,7 @@ const Register = () => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-[558px] h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.password ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
+                className={`w-full h-12 rounded-[8px] pt-3 pr-3 pb-3 pl-4 gap-1 border opacity-100 ${fieldErrors.password ? 'border-red-500 focus:ring-red-300' : 'border-[#DAD6D1]'}`}
                 autoComplete="new-password"
               />
               {fieldErrors.password && (
