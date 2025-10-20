@@ -1,10 +1,10 @@
 # Personal Blog Platform
 
-A modern, responsive personal blog platform built with Next.js, featuring user authentication, content management, and social engagement features. This project demonstrates full-stack development skills with a focus on user experience and responsive design.
+[Github](https://github.com/your-username/personal-blog) [Website](https://your-blog-url.vercel.app)
 
-## 🚀 Live Demo
+**Description :** A modern and responsive personal blog platform built with Next.js, featuring comprehensive user management, content management, and social engagement features. Users can register, login, manage profiles, post articles, and interact with content seamlessly. Includes an admin dashboard for managing posts, categories, and users.
 
-[View Live Demo](my-personal-blog-project-sooty.vercel.app) *(Replace with your actual deployment URL)*
+**Tech Stack :** Next.js 15 | React 19 | Tailwind CSS | Supabase | PostgreSQL | Radix UI
 
 ## ✨ What I Built
 

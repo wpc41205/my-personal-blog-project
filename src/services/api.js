@@ -1,19 +1,5 @@
-/**
- * API service for fetching blog data and authentication
- */
 import { supabase } from '../lib/supabase';
 
-const API_BASE_URL = 'https://blog-post-project-api.vercel.app';
-
-/**
- * Fetch all blog posts from both Supabase and External API
- * @param {Object} options - Query options
- * @param {number} options.page - Page number (default: 1)
- * @param {number} options.limit - Posts per page (default: 6)
- * @param {string} options.category - Filter by category
- * @param {string} options.keyword - Search keyword
- * @returns {Promise<Array>} Array of blog posts
- */
 export const fetchBlogPosts = async (options = {}) => {
   try {
     const { page = 1, limit = 6, category, keyword } = options;
@@ -32,75 +18,39 @@ export const fetchBlogPosts = async (options = {}) => {
       3: 'Inspiration'
     };
     
-    // Fetch from both sources in parallel
-    const [supabasePosts, externalPosts] = await Promise.allSettled([
-      // Fetch from Supabase
-      (async () => {
-        let query = supabase
-          .from('posts')
-          .select('*')
-          .order('date', { ascending: false });
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.warn('Supabase error:', error);
-          return [];
-        }
-        
-        return (data || []).map(post => ({
-          id: `supabase_${post.id}`,
-          originalId: post.id,
-          title: post.title,
-          description: post.description,
-          content: post.content,
-          category: categoryNameMap[post.category_id] || 'General',
-          image: post.image,
-          thumbnail: post.image,
-          date: post.date,
-          likes: post.likes_count || 0,
-          author: 'Pataveekorn C.',
-          status: post.status_id === 2 ? 'Draft' : 'Published', // Map status_id back to text
-          source: 'supabase'
-        }));
-      })(),
-      
-      // Fetch from External API
-      (async () => {
-        const params = new URLSearchParams();
-        params.append('page', '1');
-        params.append('limit', '100'); // Get all from external API
-        
-        const response = await fetch(`${API_BASE_URL}/posts?${params.toString()}`);
-        
-        if (!response.ok) {
-          console.warn('External API error:', response.status);
-          return [];
-        }
-        
-        const data = await response.json();
-        const posts = data.posts || data;
-        
-        return posts.map(post => ({
-          ...post,
-          id: `external_${post.id}`,
-          originalId: post.id,
-          author: post.author === "Thompson P." ? "Pataveekorn C." : post.author,
-          source: 'external'
-        }));
-      })()
-    ]);
-    
-    // Combine results
-    let allPosts = [];
-    
-    if (supabasePosts.status === 'fulfilled') {
-      allPosts = [...allPosts, ...supabasePosts.value];
+    // Fetch only from Supabase
+    let query = supabase
+      .from('posts')
+      .select('*')
+      .order('date', { ascending: false });
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.warn('Supabase error:', error);
+      return {
+        posts: [],
+        currentPage: page,
+        totalPages: 0,
+        totalPosts: 0
+      };
     }
-    
-    if (externalPosts.status === 'fulfilled') {
-      allPosts = [...allPosts, ...externalPosts.value];
-    }
+
+    let allPosts = (data || []).map(post => ({
+      id: `supabase_${post.id}`,
+      originalId: post.id,
+      title: post.title,
+      description: post.description,
+      content: post.content,
+      category: categoryNameMap[post.category_id] || 'General',
+      image: post.image,
+      thumbnail: post.image,
+      date: post.date,
+      likes: post.likes_count || 0,
+      author: 'Pataveekorn C.',
+      status: post.status_id === 2 ? 'Draft' : 'Published',
+      source: 'supabase'
+    }));
     
     // Apply filters
     let filteredPosts = allPosts;
@@ -148,76 +98,98 @@ export const fetchBlogPosts = async (options = {}) => {
   }
 };
 
-/**
- * Fetch blog posts by category
- * @param {string} category - Category to filter by
- * @param {number} page - Page number (default: 1)
- * @param {number} limit - Posts per page (default: 6)
- * @returns {Promise<Array>} Array of filtered blog posts
- */
 export const fetchBlogPostsByCategory = async (category, page = 1, limit = 6) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/posts?category=${category}&page=${page}&limit=${limit}`);
-    
-    if (!response.ok) {
-      console.warn(`API endpoint not available (${response.status}). Using mock data.`);
-      const mockPosts = getMockBlogPosts();
-      return category === 'highlight' 
-        ? mockPosts 
-        : mockPosts.filter(post => post.category.toLowerCase() === category.toLowerCase());
+    let query = supabase
+      .from('posts')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (category && category.toLowerCase() !== 'highlight') {
+      const categoryIdMap = { 'Cat': 1, 'General': 2, 'Inspiration': 3 };
+      const categoryId = categoryIdMap[category] || null;
+      if (categoryId) {
+        query = supabase
+          .from('posts')
+          .select('*')
+          .eq('category_id', categoryId)
+          .order('date', { ascending: false });
+      }
     }
-    
-    const data = await response.json();
-    const posts = data.posts || data;
-    
-    // Replace "Thompson P." with "Pataveekorn C."
-    const updatedPosts = posts.map(post => ({
-      ...post,
-      author: post.author === "Thompson P." ? "Pataveekorn C." : post.author
+
+    const { data, error } = await query;
+    if (error) {
+      console.warn('Supabase error:', error);
+      return [];
+    }
+
+    const categoryNameMap = { 1: 'Cat', 2: 'General', 3: 'Inspiration' };
+    const posts = (data || []).map(post => ({
+      id: `supabase_${post.id}`,
+      originalId: post.id,
+      title: post.title,
+      description: post.description,
+      content: post.content,
+      category: categoryNameMap[post.category_id] || 'General',
+      image: post.image,
+      thumbnail: post.image,
+      date: post.date,
+      likes: post.likes_count || 0,
+      author: 'Pataveekorn C.',
+      status: post.status_id === 2 ? 'Draft' : 'Published',
+      source: 'supabase'
     }));
-    
-    return updatedPosts;
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    return posts.slice(startIndex, endIndex);
   } catch (error) {
-    console.warn('API not available. Using mock data:', error.message);
-    const mockPosts = getMockBlogPosts();
-    return category === 'highlight' 
-      ? mockPosts 
-      : mockPosts.filter(post => post.category.toLowerCase() === category.toLowerCase());
+    console.error('Error fetching posts by category:', error.message);
+    return [];
   }
 };
 
-export const searchBlogPosts = async (query, page = 1, limit = 6) => {
+export const searchBlogPosts = async (keyword, page = 1, limit = 6) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/posts?keyword=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
-    
-    if (!response.ok) {
-      console.warn(`API endpoint not available (${response.status}). Using mock data.`);
-      const mockPosts = getMockBlogPosts();
-      return mockPosts.filter(post => 
-        post.title.toLowerCase().includes(query.toLowerCase()) ||
-        post.description.toLowerCase().includes(query.toLowerCase()) ||
-        post.content.toLowerCase().includes(query.toLowerCase())
-      );
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.warn('Supabase error:', error);
+      return [];
     }
-    
-    const data = await response.json();
-    const posts = data.posts || data;
-    
-    // Replace "Thompson P." with "Pataveekorn C."
-    const updatedPosts = posts.map(post => ({
-      ...post,
-      author: post.author === "Thompson P." ? "Pataveekorn C." : post.author
+    const categoryNameMap = { 1: 'Cat', 2: 'General', 3: 'Inspiration' };
+    const posts = (data || []).map(post => ({
+      id: `supabase_${post.id}`,
+      originalId: post.id,
+      title: post.title,
+      description: post.description,
+      content: post.content,
+      category: categoryNameMap[post.category_id] || 'General',
+      image: post.image,
+      thumbnail: post.image,
+      date: post.date,
+      likes: post.likes_count || 0,
+      author: 'Pataveekorn C.',
+      status: post.status_id === 2 ? 'Draft' : 'Published',
+      source: 'supabase'
     }));
-    
-    return updatedPosts;
-  } catch (error) {
-    console.warn('API not available. Using mock data:', error.message);
-    const mockPosts = getMockBlogPosts();
-    return mockPosts.filter(post => 
-      post.title.toLowerCase().includes(query.toLowerCase()) ||
-      post.description.toLowerCase().includes(query.toLowerCase()) ||
-      post.content.toLowerCase().includes(query.toLowerCase())
+
+    const keywordLower = (keyword || '').toLowerCase();
+    const filtered = posts.filter(post =>
+      post.title?.toLowerCase().includes(keywordLower) ||
+      post.description?.toLowerCase().includes(keywordLower) ||
+      post.content?.toLowerCase().includes(keywordLower)
     );
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    return filtered.slice(startIndex, endIndex);
+  } catch (error) {
+    console.error('Error searching posts:', error.message);
+    return [];
   }
 };
 
@@ -538,12 +510,6 @@ export const getCurrentUser = async () => {
   }
 };
 
-/**
- * Upload profile image to Supabase Storage
- * @param {File} file - Image file to upload
- * @param {string} userId - User ID
- * @returns {Promise<string>} Public URL of uploaded image
- */
 export const uploadProfileImage = async (file, userId) => {
   try {
     console.log('Uploading profile image for user:', userId);
@@ -585,12 +551,6 @@ export const uploadProfileImage = async (file, userId) => {
   }
 };
 
-/**
- * Update user profile in database
- * @param {string} userId - User ID
- * @param {Object} updates - Profile updates
- * @returns {Promise<Object>} Updated user data
- */
 export const updateUserProfile = async (userId, updates) => {
   try {
     console.log('Updating user profile:', userId, updates);
@@ -620,14 +580,11 @@ export const getBlogPost = async (postId) => {
     // Parse ID to determine source and get real ID
     const idStr = String(postId);
     let realId = postId;
-    let source = 'external'; // default to external API
+    let source = 'supabase';
     
     if (idStr.startsWith('supabase_')) {
       realId = idStr.replace('supabase_', '');
       source = 'supabase';
-    } else if (idStr.startsWith('external_')) {
-      realId = idStr.replace('external_', '');
-      source = 'external';
     }
     
     if (source === 'supabase') {
@@ -668,26 +625,6 @@ export const getBlogPost = async (postId) => {
         status: data.status_id === 2 ? 'Draft' : 'Published',
         source: 'supabase'
       };
-    } else {
-      // Fetch from external API
-      const response = await fetch(`${API_BASE_URL}/posts/${realId}`);
-      
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-      
-      const post = await response.json();
-      
-      // Replace "Thompson P." with "Pataveekorn C."
-      const updatedPost = {
-        ...post,
-        id: `external_${post.id}`,
-        originalId: post.id,
-        author: post.author === "Thompson P." ? "Pataveekorn C." : post.author,
-        source: 'external'
-      };
-      
-      return updatedPost;
     }
   } catch (error) {
     console.warn('Error fetching post, trying mock data:', error.message);
@@ -695,9 +632,8 @@ export const getBlogPost = async (postId) => {
     // Return mock post data as fallback
     const mockPosts = getMockBlogPosts();
     const mockPost = mockPosts.posts.find(post => {
-      // Check both with and without prefix
       return post.id.toString() === postId.toString() || 
-             post.id.toString() === String(postId).replace(/^(supabase_|external_)/, '');
+             post.id.toString() === String(postId).replace(/^supabase_/, '');
     });
     
     if (!mockPost) {
@@ -716,10 +652,6 @@ export const toggleLike = async (postId, userId) => {
     
     if (idStr.startsWith('supabase_')) {
       realId = parseInt(idStr.replace('supabase_', ''));
-    } else if (idStr.startsWith('external_')) {
-      // For external posts, use a negative number to avoid conflicts with Supabase posts
-      const externalId = parseInt(idStr.replace('external_', ''));
-      realId = -externalId; // Use negative numbers for external posts
     } else {
       // If it's already a number, use it directly
       realId = parseInt(postId);
@@ -786,10 +718,6 @@ export const getLikeCount = async (postId) => {
     
     if (idStr.startsWith('supabase_')) {
       realId = parseInt(idStr.replace('supabase_', ''));
-    } else if (idStr.startsWith('external_')) {
-      // For external posts, use a negative number to avoid conflicts with Supabase posts
-      const externalId = parseInt(idStr.replace('external_', ''));
-      realId = -externalId; // Use negative numbers for external posts
     } else {
       // If it's already a number, use it directly
       realId = parseInt(postId);
@@ -814,12 +742,6 @@ export const getLikeCount = async (postId) => {
   }
 };
 
-/**
- * Check if user liked a post
- * @param {string|number} postId - The ID of the post
- * @param {string} userId - The ID of the user
- * @returns {Promise<boolean>} Whether user liked the post
- */
 export const checkUserLike = async (postId, userId) => {
   try {
     // Parse ID to get real ID for database
@@ -828,10 +750,6 @@ export const checkUserLike = async (postId, userId) => {
     
     if (idStr.startsWith('supabase_')) {
       realId = parseInt(idStr.replace('supabase_', ''));
-    } else if (idStr.startsWith('external_')) {
-      // For external posts, use a negative number to avoid conflicts with Supabase posts
-      const externalId = parseInt(idStr.replace('external_', ''));
-      realId = -externalId; // Use negative numbers for external posts
     } else {
       // If it's already a number, use it directly
       realId = parseInt(postId);
@@ -866,10 +784,6 @@ export const addComment = async (postId, userId, content) => {
     
     if (idStr.startsWith('supabase_')) {
       realId = parseInt(idStr.replace('supabase_', ''));
-    } else if (idStr.startsWith('external_')) {
-      // For external posts, use a negative number to avoid conflicts with Supabase posts
-      const externalId = parseInt(idStr.replace('external_', ''));
-      realId = -externalId; // Use negative numbers for external posts
     } else {
       // If it's already a number, use it directly
       realId = parseInt(postId);
@@ -1012,12 +926,6 @@ export const getComments = async (postId) => {
   }
 };
 
-/**
- * Reset user password using Supabase Auth
- * @param {string} currentPassword - Current password
- * @param {string} newPassword - New password
- * @returns {Promise<Object>} Success response
- */
 export const resetPassword = async (currentPassword, newPassword) => {
   try {
     console.log('Starting password reset process...');
@@ -1113,10 +1021,6 @@ export const resetPassword = async (currentPassword, newPassword) => {
   }
 };
 
-/**
- * Get categories from API or return mock categories
- * @returns {Promise<Array>} Array of categories
- */
 export const fetchCategories = async () => {
   try {
     // Fetch from Supabase categories table
@@ -1134,33 +1038,10 @@ export const fetchCategories = async () => {
     return (data || []).map(cat => cat.name);
   } catch (error) {
     console.error('Error fetching categories:', error.message);
-    
-    // Fallback: try external API
-    try {
-      const response = await fetch(`${API_BASE_URL}/posts?page=1&limit=30`);
-      
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-      
-      const apiData = await response.json();
-      const posts = apiData.posts || apiData;
-      
-      // Extract unique categories from posts
-      const categories = [...new Set(posts.map(post => post.category))];
-      return categories;
-    } catch (fallbackError) {
-      console.error('Fallback API also failed:', fallbackError);
-      // Return mock categories if both fail
-      return ['Cat', 'General', 'Inspiration'];
-    }
+    return ['Cat', 'General', 'Inspiration'];
   }
 };
 
-/**
- * Fetch all categories with full details for admin
- * @returns {Promise<Array>} Array of category objects
- */
 export const fetchAllCategories = async () => {
   try {
     // Fetch from Supabase categories table
@@ -1182,11 +1063,6 @@ export const fetchAllCategories = async () => {
   }
 };
 
-/**
- * Create a new category
- * @param {Object} categoryData - Category data
- * @returns {Promise<Object>} Created category
- */
 export const createCategory = async (categoryData) => {
   try {
     const { data, error } = await supabase
@@ -1206,12 +1082,6 @@ export const createCategory = async (categoryData) => {
   }
 };
 
-/**
- * Update a category
- * @param {number} id - Category ID
- * @param {Object} categoryData - Updated category data
- * @returns {Promise<Object>} Updated category
- */
 export const updateCategory = async (id, categoryData) => {
   try {
     const { data, error } = await supabase
@@ -1232,11 +1102,6 @@ export const updateCategory = async (id, categoryData) => {
   }
 };
 
-/**
- * Delete a category
- * @param {number} id - Category ID
- * @returns {Promise<boolean>} Success status
- */
 export const deleteCategory = async (id) => {
   try {
     const { error } = await supabase
@@ -1255,15 +1120,8 @@ export const deleteCategory = async (id) => {
   }
 };
 
-/**
- * Admin API functions for article management
- */
+// Admin API functions for article management
 
-/**
- * Create a new article
- * @param {Object} articleData - Article data
- * @returns {Promise<Object>} Created article
- */
 export const createArticle = async (articleData) => {
   try {
     console.log('Creating article with data:', articleData);
@@ -1288,7 +1146,7 @@ export const createArticle = async (articleData) => {
       imageUrl = articleData.thumbnail;
     }
     
-    // Map category name to category_id (you may need to adjust this mapping)
+    // Map category name to category_id (static mapping)
     let categoryId = 1; // Default category
     if (articleData.category) {
       const categoryMap = {
@@ -1340,12 +1198,8 @@ export const createArticle = async (articleData) => {
   }
 };
 
-/**
- * Update an existing article
- * @param {string|number} id - Article ID (with prefix like 'supabase_1')
- * @param {Object} articleData - Updated article data
- * @returns {Promise<Object>} Updated article
- */
+// (Reverted) removed seeding utilities
+
 export const updateArticle = async (id, articleData) => {
   try {
     console.log('Updating article:', id, articleData);
@@ -1442,11 +1296,6 @@ export const updateArticle = async (id, articleData) => {
  * Admin users (panel) helpers
  */
 
-/**
- * Get admin user by email from admin_users table
- * @param {string} email
- * @returns {Promise<Object|null>}
- */
 export const getAdminUserByEmail = async (email) => {
   try {
     if (!email) throw new Error('Email is required');
@@ -1467,12 +1316,6 @@ export const getAdminUserByEmail = async (email) => {
   }
 };
 
-/**
- * Update admin user row by email
- * @param {string} email
- * @param {Object} updates
- * @returns {Promise<Object>} Updated row
- */
 export const updateAdminUserByEmail = async (email, updates) => {
   try {
     if (!email) throw new Error('Email is required');
@@ -1498,27 +1341,16 @@ export const updateAdminUserByEmail = async (email, updates) => {
   }
 };
 
-/**
- * Delete an article
- * @param {string|number} id - Article ID (with prefix like 'supabase_1' or 'external_1')
- * @returns {Promise<boolean>} Success status
- */
 export const deleteArticle = async (id) => {
   try {
     // Parse ID to determine source
     const idStr = String(id);
     let realId = id;
-    let source = 'supabase';
-    
     if (idStr.startsWith('supabase_')) {
       realId = idStr.replace('supabase_', '');
-      source = 'supabase';
-    } else if (idStr.startsWith('external_')) {
-      realId = idStr.replace('external_', '');
-      source = 'external';
     }
     
-    if (source === 'supabase') {
+    if (true) {
       // Delete from Supabase
       const { error } = await supabase
         .from('posts')
@@ -1530,9 +1362,6 @@ export const deleteArticle = async (id) => {
       }
       
       return true;
-    } else {
-      // Cannot delete from external API
-      throw new Error('Cannot delete articles from external API');
     }
   } catch (error) {
     console.error('Error deleting article:', error.message);
@@ -1540,20 +1369,23 @@ export const deleteArticle = async (id) => {
   }
 };
 
-/**
- * Get a single article by ID
- * @param {string|number} id - Article ID
- * @returns {Promise<Object>} Article data
- */
 export const fetchArticleById = async (id) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/posts/${id}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch article: ${response.status}`);
+    const idStr = String(id);
+    let realId = id;
+    if (idStr.startsWith('supabase_')) realId = idStr.replace('supabase_', '');
+
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', realId)
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to fetch article: ${error.message}`);
     }
-    
-    return await response.json();
+
+    return data;
   } catch (error) {
     console.error('Error fetching article:', error.message);
     throw error;

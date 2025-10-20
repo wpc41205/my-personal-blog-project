@@ -151,8 +151,8 @@ const ArticleGrid = () => {
   };
 
   const handleResultSelect = (articleId) => {
-    // Navigate to the selected article
-    router.push(`/post/${articleId}`);
+    // Navigate to the selected article without scrolling to top
+    router.push(`/post/${articleId}`, undefined, { scroll: false });
     setShowResults(false);
     setSearchTerm('');
   };
@@ -187,15 +187,22 @@ const ArticleGrid = () => {
         Latest articles
       </h2>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <span className="ml-4 text-gray-600">Loading articles...</span>
-        </div>
-      )}
+      {/* Search and Filter Component should always be visible (no loading here) */}
+      <SearchAndFilter
+        searchKeyword={searchTerm}
+        category={activeCategory}
+        onSearchChange={handleSearchChange}
+        onCategoryChange={setActiveCategory}
+        searchResults={searchResults}
+        isSearching={isSearching}
+        showResults={showResults}
+        selectedIndex={selectedIndex}
+        onResultSelect={handleResultSelect}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+      />
 
-      {/* Error State */}
+      {/* Error State (below the bar) */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
           <p className="text-red-700">{error}</p>
@@ -208,21 +215,12 @@ const ArticleGrid = () => {
         </div>
       )}
 
-      {/* Search and Filter Component */}
-      {!loading && !error && (
-        <SearchAndFilter
-          searchKeyword={searchTerm}
-          category={activeCategory}
-          onSearchChange={handleSearchChange}
-          onCategoryChange={setActiveCategory}
-          searchResults={searchResults}
-          isSearching={isSearching}
-          showResults={showResults}
-          selectedIndex={selectedIndex}
-          onResultSelect={handleResultSelect}
-          onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
-        />
+      {/* Loading placeholder for articles area */}
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <span className="ml-4 text-gray-600">Loading articles...</span>
+        </div>
       )}
 
       {/* Articles Grid */}
