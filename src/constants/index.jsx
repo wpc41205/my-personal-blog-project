@@ -4,22 +4,10 @@
  */
 export const DEFAULT_FILTER_OPTIONS = [
   { value: 'highlight', label: 'Highlight' },
-  { value: 'cat', label: 'Cat' },
-  { value: 'inspiration', label: 'Inspiration' },
-  { value: 'general', label: 'General' }
+  { value: 'skills', label: 'Skills' },
+  { value: 'mindset', label: 'Mindset' },
+  { value: 'health', label: 'Health' }
 ];
-
-/**
- * API Configuration
- */
-export const API_CONFIG = {
-  BASE_URL: 'https://blog-post-project-api.vercel.app',
-  ENDPOINTS: {
-    POSTS: '/api/posts',
-    CATEGORIES: '/api/categories',
-    SEARCH: '/api/posts/search'
-  }
-};
 
 /**
  * Date formatting utility

@@ -6,16 +6,16 @@ export const fetchBlogPosts = async (options = {}) => {
     
     // Category ID mapping
     const categoryIdMap = {
-      'Cat': 1,
-      'General': 2,
-      'Inspiration': 3
+      'Skills': 1,
+      'Mindset': 2,
+      'Health': 3
     };
     
     // Category name mapping (reverse)
     const categoryNameMap = {
-      1: 'Cat',
-      2: 'General',
-      3: 'Inspiration'
+      1: 'Skills',
+      2: 'Mindset',
+      3: 'Health'
     };
     
     // Fetch only from Supabase
@@ -106,7 +106,7 @@ export const fetchBlogPostsByCategory = async (category, page = 1, limit = 6) =>
       .order('date', { ascending: false });
 
     if (category && category.toLowerCase() !== 'highlight') {
-      const categoryIdMap = { 'Cat': 1, 'General': 2, 'Inspiration': 3 };
+      const categoryIdMap = { 'Skills': 1, 'Mindset': 2, 'Health': 3 };
       const categoryId = categoryIdMap[category] || null;
       if (categoryId) {
         query = supabase
@@ -123,7 +123,7 @@ export const fetchBlogPostsByCategory = async (category, page = 1, limit = 6) =>
       return [];
     }
 
-    const categoryNameMap = { 1: 'Cat', 2: 'General', 3: 'Inspiration' };
+    const categoryNameMap = { 1: 'Skills', 2: 'Mindset', 3: 'Health' };
     const posts = (data || []).map(post => ({
       id: `supabase_${post.id}`,
       originalId: post.id,
@@ -160,7 +160,7 @@ export const searchBlogPosts = async (keyword, page = 1, limit = 6) => {
       console.warn('Supabase error:', error);
       return [];
     }
-    const categoryNameMap = { 1: 'Cat', 2: 'General', 3: 'Inspiration' };
+    const categoryNameMap = { 1: 'Skills', 2: 'Mindset', 3: 'Health' };
     const posts = (data || []).map(post => ({
       id: `supabase_${post.id}`,
       originalId: post.id,

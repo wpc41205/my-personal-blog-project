@@ -177,6 +177,16 @@ const ArticleGrid = () => {
       );
     }
 
+    // Randomize order for Highlight tab only
+    if (activeCategory === 'highlight') {
+      const copy = [...filtered];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
     return filtered;
   }, [articles, activeCategory, searchTerm]);
 

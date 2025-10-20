@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 import Navigation from '../../components/layout/Navigation';
 import Footer from '../../components/layout/Footer';
@@ -264,7 +265,14 @@ const ViewPost = () => {
             {/* Post Content */}
             <div className="prose prose-lg max-w-none text-[#43403B] leading-relaxed">
               <div className="markdown space-y-4">
-                <ReactMarkdown>{post.content}</ReactMarkdown>
+                {(() => {
+                  const normalized = (post.content || '').replace(/\\n/g, '\n');
+                  return (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {normalized}
+                    </ReactMarkdown>
+                  );
+                })()}
               </div>
             </div>
 
