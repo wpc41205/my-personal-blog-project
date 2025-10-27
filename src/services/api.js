@@ -1191,6 +1191,17 @@ export const createArticle = async (articleData) => {
     }
     
     console.log('Article created successfully:', data);
+    
+    // Create notification if article is published
+    if (statusId === 1) { // Only notify for published articles
+      try {
+        await createNewPostNotification(data.id, articleData.title);
+      } catch (notificationError) {
+        console.warn('Failed to create notification:', notificationError);
+        // Don't fail the article creation if notification fails
+      }
+    }
+    
     return data;
   } catch (error) {
     console.error('Error creating article:', error);
@@ -1389,5 +1400,100 @@ export const fetchArticleById = async (id) => {
   } catch (error) {
     console.error('Error fetching article:', error.message);
     throw error;
+  }
+};
+
+// Notification functions
+export const createNewPostNotification = async (postId, postTitle) => {
+  try {
+    console.log('Creating new post notification for:', postTitle);
+    
+    // Create notification data
+    const notificationData = {
+      type: 'new_post',
+      title: 'New Article Published',
+      message: `A new article "${postTitle}" has been published!`,
+      post_id: postId,
+      created_at: new Date().toISOString(),
+      is_read: false
+    };
+    
+    // Insert notification into database
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert([notificationData])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating notification:', error);
+      throw error;
+    }
+    
+    console.log('Notification created successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error creating new post notification:', error);
+    throw error;
+  }
+};
+
+export const getNotifications = async (limit = 50) => {
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) {
+      console.error('Error fetching notifications:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error getting notifications:', error);
+    throw error;
+  }
+};
+
+export const markNotificationAsRead = async (notificationId) => {
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error marking notification as read:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    throw error;
+  }
+};
+
+export const getUnreadNotificationCount = async () => {
+  try {
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_read', false);
+    
+    if (error) {
+      console.error('Error getting unread count:', error);
+      return 0;
+    }
+    
+    return count || 0;
+  } catch (error) {
+    console.error('Error getting unread notification count:', error);
+    return 0;
   }
 };

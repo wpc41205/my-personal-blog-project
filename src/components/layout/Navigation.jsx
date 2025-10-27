@@ -6,11 +6,15 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
+import { getUnreadNotificationCount } from '../../services/api';
+import NotificationDropdown from '../ui/NotificationDropdown';
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { user, logout } = useAuth();
   const router = useRouter();
 
@@ -20,6 +24,18 @@ export default function Navigation() {
 
   const toggleUserMenu = () => {
     setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
+  const toggleNotificationDropdown = () => {
+    setIsNotificationOpen(!isNotificationOpen);
+    if (!isNotificationOpen) {
+      // Refresh unread count when opening
+      loadUnreadCount();
+    }
+  };
+
+  const closeNotificationDropdown = () => {
+    setIsNotificationOpen(false);
   };
 
   const handleLogout = async () => {
@@ -42,11 +58,33 @@ export default function Navigation() {
     }
   };
 
-  // Close user menu when clicking outside
+  // Load unread notification count
+  const loadUnreadCount = async () => {
+    try {
+      const count = await getUnreadNotificationCount();
+      setUnreadCount(count);
+    } catch (error) {
+      console.error('Error loading unread count:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadUnreadCount();
+      // Refresh count every 30 seconds
+      const interval = setInterval(loadUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isUserMenuOpen && !event.target.closest('.user-menu-container')) {
         setIsUserMenuOpen(false);
+      }
+      if (isNotificationOpen && !event.target.closest('.notification-container')) {
+        setIsNotificationOpen(false);
       }
     };
 
@@ -54,7 +92,7 @@ export default function Navigation() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isUserMenuOpen]);
+  }, [isUserMenuOpen, isNotificationOpen]);
 
   return (
     <nav className="bg-[#F9F8F6] border-b border-[#DAD6D1] h-20">
@@ -81,14 +119,28 @@ export default function Navigation() {
             {user ? (
               <div className="flex items-center space-x-4">
                 {/* Notification Bell */}
-                <div className="relative">
-                  <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors">
+                <div className="relative notification-container">
+                  <button 
+                    onClick={toggleNotificationDropdown}
+                    className="w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
                     <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
                     </svg>
                     {/* Notification Badge */}
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                    {unreadCount > 0 && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-xs text-white font-medium">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      </div>
+                    )}
                   </button>
+                  
+                  <NotificationDropdown 
+                    isOpen={isNotificationOpen} 
+                    onClose={closeNotificationDropdown}
+                  />
                 </div>
 
                 {/* User Profile */}

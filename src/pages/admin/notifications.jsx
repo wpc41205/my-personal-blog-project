@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { supabase } from '@/lib/supabase';
+import { getNotifications, markNotificationAsRead, getUnreadNotificationCount } from '../../services/api';
 
 const AdminNotifications = () => {
   const router = useRouter();
@@ -66,6 +67,9 @@ const AdminNotifications = () => {
       try {
         setLoading(true);
 
+        // Fetch system notifications (new posts, etc.)
+        const systemNotifications = await getNotifications(20);
+        
         // Fetch recent comments
         const { data: comments, error: commentsError } = await supabase
           .from('comments')
@@ -96,7 +100,8 @@ const AdminNotifications = () => {
             text: `Commented on your article: ${p.title || 'Untitled'}`,
             detail: c.content || '',
             timeAgo: formatTimeAgo(c.created_at),
-            href: `/admin/article-management`
+            href: `/admin/article-management`,
+            type: 'comment'
           };
         });
 
@@ -130,12 +135,38 @@ const AdminNotifications = () => {
             text: `liked your article: ${p.title || 'Untitled'}`,
             detail: '',
             timeAgo: formatTimeAgo(l.created_at),
-            href: `/admin/article-management`
+            href: `/admin/article-management`,
+            type: 'like'
           };
         });
 
-        const combined = [...commentNotifications, ...likeNotifications]
-          .sort((a, b) => (a.timeAgo > b.timeAgo ? -1 : 1));
+        // Get admin user data
+        const { data: adminUser } = await supabase
+          .from('admin_users')
+          .select('name, avatar_url')
+          .eq('role', 'super_admin')
+          .single();
+
+        // Convert system notifications to display format
+        const systemNotificationDisplay = systemNotifications.map(notification => ({
+          id: `system_${notification.id}`,
+          avatar: adminUser?.avatar_url || '/me.jpg', // Use admin's actual avatar
+          name: adminUser?.name || 'Admin',
+          text: notification.message,
+          detail: '',
+          timeAgo: formatTimeAgo(notification.created_at),
+          href: `/post/${notification.post_id}`,
+          type: 'system',
+          isRead: notification.is_read
+        }));
+
+        const combined = [...systemNotificationDisplay, ...commentNotifications, ...likeNotifications]
+          .sort((a, b) => {
+            // Sort by time, with unread system notifications first
+            if (a.type === 'system' && !a.isRead) return -1;
+            if (b.type === 'system' && !b.isRead) return 1;
+            return a.timeAgo > b.timeAgo ? -1 : 1;
+          });
 
         if (combined.length === 0) {
           setNotifications(getDemoData(avatarUrl));
@@ -175,13 +206,19 @@ const AdminNotifications = () => {
         <main className="flex-1 px-12 py-8">
           <div className="rounded-lg">
             {notifications.map((n, idx) => (
-              <div key={n.id} className={`px-6 py-5 ${idx !== 0 ? 'border-t border-[#EFEDE9]' : ''}`}>
+              <div 
+                key={n.id} 
+                className={`px-6 py-5 ${idx !== 0 ? 'border-t border-[#EFEDE9]' : ''} ${n.type === 'system' && !n.isRead ? 'bg-blue-50' : ''}`}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
                     <Image src={n.avatar} alt={n.name} width={40} height={40} className="w-10 h-10 rounded-full object-cover" />
                     <div>
                       <p className="text-[#26231E] font-medium text-sm">
                         <span className="text-[#26231E] font-semibold">{n.name}</span> {n.text}
+                        {n.type === 'system' && !n.isRead && (
+                          <span className="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+                        )}
                       </p>
                       {n.detail && (
                         <p className="text-[#75716B] text-sm mt-2 max-w-4xl">{n.detail}</p>
@@ -189,7 +226,35 @@ const AdminNotifications = () => {
                       <p className="text-xs text-[#75716B] mt-2">{n.timeAgo}</p>
                     </div>
                   </div>
-                  <a href={n.href} className="text-[#26231E] text-sm hover:text-[#8B7355]">View</a>
+                  <a 
+                    href={n.href} 
+                    className="text-[#26231E] text-sm hover:text-[#8B7355]"
+                    onClick={async (e) => {
+                      if (n.type === 'system' && !n.isRead) {
+                        e.preventDefault();
+                        try {
+                          const notificationId = n.id.replace('system_', '');
+                          await markNotificationAsRead(notificationId);
+                          // Update local state
+                          setNotifications(prev => 
+                            prev.map(notif => 
+                              notif.id === n.id 
+                                ? { ...notif, isRead: true }
+                                : notif
+                            )
+                          );
+                          // Navigate to the post
+                          router.push(n.href);
+                        } catch (error) {
+                          console.error('Error marking notification as read:', error);
+                          // Still navigate even if marking as read fails
+                          router.push(n.href);
+                        }
+                      }
+                    }}
+                  >
+                    View
+                  </a>
                 </div>
               </div>
             ))}
